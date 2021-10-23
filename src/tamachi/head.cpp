@@ -8,6 +8,7 @@
 #include <functional>
 #include <chrono>
 #include <vector>
+#include <unordered_map>
 
 
 namespace tamachi {

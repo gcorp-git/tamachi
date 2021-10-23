@@ -7,6 +7,10 @@ namespace tamachi {
 
 	class Image {
 	public:
+		uint32_t width = 0;
+		uint32_t height = 0;
+		
+		void* bitmap = NULL;
 
 		Image( std::string filename ) {
 			std::ifstream file( ( filename + ".tamachi-image" ).c_str(), std::ios::in | std::ios::binary );
@@ -62,6 +66,8 @@ namespace tamachi {
 						file.read( reinterpret_cast<char*>( &pixel ), sizeof(uint8_t) );
 						*pos++ = palette[ pixel ];
 					}
+
+					_is_ok = true;
 				} break;
 				default: {
 					std::cout << "Image version is not supported: " << filename << std::endl;
@@ -74,30 +80,12 @@ namespace tamachi {
 			if ( bitmap ) VirtualFree( bitmap, 0, MEM_RELEASE );
 		}
 
-		void render( uint32_t x=0, uint32_t y=0, uint32_t z=0 ) {
-			if ( !width || !height || !bitmap ) return;
-
-			auto p = reinterpret_cast<uint32_t*>( bitmap );
-
-			uint32_t w = width;
-			uint32_t h = height;
-
-			if ( x + w > buffer::width ) w = buffer::width - x;
-			if ( y + h > buffer::height ) h = buffer::height - y;
-
-			for ( uint32_t iy = 0; iy < h; ++iy ) {
-				for ( uint32_t ix = 0; ix < w; ++ix ) {
-					buffer::set_pixel( *p, x + ix, y + iy, z );
-					
-					p += 1;
-				}
-			}
+		bool is_ok() {
+			return _is_ok;
 		}
 
 	private:
-		uint32_t width = 0;
-		uint32_t height = 0;
-		void* bitmap = NULL;
+		bool _is_ok = false;
 	
 	};
 

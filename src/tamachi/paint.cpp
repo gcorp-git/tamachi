@@ -7,33 +7,33 @@
 namespace tamachi {
 	namespace paint {
 
-		void dot( uint32_t color, uint32_t x, uint32_t y, uint32_t z=0 ) {
+		void dot( uint32_t color, uint32_t x, uint32_t y, uint32_t z ) {
 			buffer::set_pixel( color, x, y, z );
 		}
 
-		void rect( uint32_t color, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t z=0 ) {
-			for ( uint32_t ix = 0; ix < w; ++ix ) {
-				buffer::set_pixel( color, x + ix, y, z );
-				buffer::set_pixel( color, x + ix, y + h - 1, z );
-			}
-			for ( uint32_t iy = 1; iy < h - 1; ++iy ) {
-				buffer::set_pixel( color, x, y + iy, z );
-				buffer::set_pixel( color, x + w - 1, y + iy, z );
-			}
-		}
-
-		void fill( uint32_t color, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t z=0 ) {
+		void rect( uint32_t color, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t z, bool fill=false ) {
 			if ( x + w > buffer::width ) w = buffer::width - x;
 			if ( y + h > buffer::height ) h = buffer::height - y;
 
-			for ( uint32_t iy = y; iy < y + h; ++iy ) {
-				for ( uint32_t ix = x; ix < x + w; ++ix ) {
-					buffer::set_pixel( color, ix, iy, z );
+			if ( fill ) {
+				for ( uint32_t iy = y; iy < y + h; ++iy ) {
+					for ( uint32_t ix = x; ix < x + w; ++ix ) {
+						buffer::set_pixel( color, ix, iy, z );
+					}
+				}
+			} else {
+				for ( uint32_t ix = 0; ix < w; ++ix ) {
+					buffer::set_pixel( color, x + ix, y, z );
+					buffer::set_pixel( color, x + ix, y + h - 1, z );
+				}
+				for ( uint32_t iy = 1; iy < h - 1; ++iy ) {
+					buffer::set_pixel( color, x, y + iy, z );
+					buffer::set_pixel( color, x + w - 1, y + iy, z );
 				}
 			}
 		}
 
-		void line( uint32_t color=0, uint32_t x=0, uint32_t y=0, uint32_t to_x=0, uint32_t to_y=0, uint32_t z=0 ) {
+		void line( uint32_t color, uint32_t x, uint32_t y, uint32_t to_x, uint32_t to_y, uint32_t z ) {
 			uint32_t from_x = x;
 			uint32_t from_y = y;
 

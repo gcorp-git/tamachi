@@ -4,7 +4,7 @@
 namespace tamachi {
 	namespace input {
 
-		const int BUTTONS_COUNT = 0xFF;
+		const int BUTTONS_COUNT = 256;
 
 		struct BUTTON_STATE {
 			bool is_down = false;
@@ -12,12 +12,6 @@ namespace tamachi {
 		};
 
 		BUTTON_STATE buttons[ BUTTONS_COUNT ] = {};
-
-		void reset() {
-			for ( int i = 0; i < BUTTONS_COUNT; ++i ) {
-				buttons[ i ].is_changed = false;
-			}
-		}
 
 		inline bool is_down( uint8_t button ) {
 			return buttons[ button ].is_down;
@@ -33,6 +27,12 @@ namespace tamachi {
 
 		inline bool released( uint8_t button ) {
 			return !buttons[ button ].is_down && buttons[ button ].is_changed;
+		}
+
+		void refresh() {
+			for ( int i = 0; i < BUTTONS_COUNT; ++i ) {
+				buttons[ i ].is_changed = false;
+			}
 		}
 
 		bool process( MSG* message ) {
@@ -60,6 +60,13 @@ namespace tamachi {
 			if ( buttons[ VK_MENU ].is_down && buttons[ VK_F4 ].is_down ) return false;
 
 			return true;
+		}
+
+		void reset() {
+			for ( int i = 0; i < BUTTONS_COUNT; ++i ) {
+				buttons[ i ].is_changed = false;
+				buttons[ i ].is_down = false;
+			}
 		}
 
 	}

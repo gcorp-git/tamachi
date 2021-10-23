@@ -12,5 +12,9 @@ namespace tamachi {
 			while ( ShowCursor( false ) >= 0 );
 		}
 
+		void reset() {
+			show();
+		}
+
 	}
 }

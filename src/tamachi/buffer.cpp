@@ -17,21 +17,29 @@ namespace tamachi {
 
 		HDC main_hdc;
 		HDC layer_hdc;
+
 		HBITMAP main_bitmap;
 		HBITMAP layer_bitmap;
+
 		BLENDFUNCTION blend_function;
 		
 		uint8_t _bg_color = 0x00;
 		bool _is_empty = true;
+		bool _is_inited = false;
 
 		void init();
 		void set_bg_color( uint8_t new_bg_color );
-		void reset( uint32_t new_width, uint32_t new_height, uint32_t new_layers_count );
+		void resize( uint32_t new_width, uint32_t new_height, uint32_t new_layers_count );
 		void flush();
 		void clear( uint8_t byte );
 		void set_pixel( uint32_t color, uint32_t x, uint32_t y, uint32_t z );
+		void reset();
 
 		void init() {
+			if ( _is_inited ) return;
+
+			_is_inited = true;
+
 			main_hdc = CreateCompatibleDC( hdc );
 			layer_hdc = CreateCompatibleDC( hdc );
 
@@ -41,7 +49,7 @@ namespace tamachi {
 			blend_function.SourceConstantAlpha = 0xFF;
 			blend_function.AlphaFormat = AC_SRC_ALPHA;
 
-			reset( screen::width, screen::height, 1 );
+			resize( screen::width, screen::height, 1 );
 		}
 
 		void set_bg_color( uint8_t new_bg_color=0x00 ) {
@@ -52,7 +60,7 @@ namespace tamachi {
 			_is_changed = true;
 		}
 
-		void reset( uint32_t new_width=0, uint32_t new_height=0, uint32_t new_layers_count=0 ) {
+		void resize( uint32_t new_width=0, uint32_t new_height=0, uint32_t new_layers_count=0 ) {
 			if ( !new_width ) new_width = width;
 			if ( !new_height ) new_height = height;
 			if ( !new_layers_count ) new_layers_count = layers_count ? layers_count : 1;
@@ -99,11 +107,11 @@ namespace tamachi {
 			_is_changed = false;
 		}
 
-		void clear( uint8_t byte=0 ) {
+		void clear() {
 			if ( !layers ) return;
 			if ( _is_empty ) return;
 
-			memset( layers, byte, layers_count * size * 4 );
+			memset( layers, 0, layers_count * size * 4 );
 
 			_is_empty = true;
 			_is_changed = true;
@@ -129,6 +137,30 @@ namespace tamachi {
 
 			_is_empty = false;
 			_is_changed = true;
+		}
+
+		void reset() {
+			if ( !_is_inited ) return;
+
+			size = 0;
+			width = 0;
+			height = 0;
+			layers_count = 0;
+
+			if ( main_bitmap ) DeleteObject( main_bitmap );
+			if ( bg ) VirtualFree( bg, 0, MEM_RELEASE );
+			if ( layer_bitmap ) DeleteObject( layer_bitmap );
+			if ( layers ) VirtualFree( layers, 0, MEM_RELEASE );
+
+			ReleaseDC( window, main_hdc );
+			ReleaseDC( window, layer_hdc );
+
+			delete &blend_function;
+			
+			_bg_color = 0x00;
+			_is_empty = true;
+
+			_is_inited = false;
 		}
 
 	}

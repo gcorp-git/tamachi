@@ -2,9 +2,11 @@
 #include "cursor.cpp"
 #include "fps.cpp"
 #include "head.cpp"
+#include "images.cpp"
 #include "input.cpp"
 #include "paint.cpp"
 #include "screen.cpp"
+#include "tiles.cpp"
 
 
 namespace tamachi {
@@ -90,7 +92,7 @@ namespace tamachi {
 				buffer::flush();
 			}
 
-			input::reset();
+			input::refresh();
 		}
 	}
 
@@ -100,6 +102,13 @@ namespace tamachi {
 		_is_running = false;
 
 		if ( _on_stop ) _on_stop();
+
+		buffer::reset();
+		cursor::reset();
+		images::reset();
+		input::reset();
+		screen::reset();
+		tiles::reset();
 	}
 
 	void set_title( std::string title ) {

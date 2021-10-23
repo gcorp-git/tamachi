@@ -14,6 +14,11 @@ namespace tamachi {
 
 		bool is_fullscreen = false;
 
+		void enable_fullscreen();
+		void disable_fullscreen();
+		void toggle_fullscreen();
+		void resize( uint32_t new_width, uint32_t new_height );
+		void reset();
 		void _on_resize( uint32_t new_width, uint32_t new_height );
 
 		void enable_fullscreen() {
@@ -67,6 +72,10 @@ namespace tamachi {
 			_on_resize( new_width, new_height );
 
 			if ( !is_fullscreen ) SetWindowPos( window, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_FRAMECHANGED );
+		}
+
+		void reset() {
+			disable_fullscreen();
 		}
 
 		void _on_resize( uint32_t new_width, uint32_t new_height ) {
