@@ -11,8 +11,6 @@ namespace tamachi {
 		uint32_t width = 0;
 		uint32_t height = 0;
 		uint32_t layers_count = 0;
-		uint8_t bg_color = 0x00;
-		bool is_empty = true;
 
 		void* bg = NULL;
 		void* layers = NULL;
@@ -22,6 +20,16 @@ namespace tamachi {
 		HBITMAP main_bitmap;
 		HBITMAP layer_bitmap;
 		BLENDFUNCTION blend_function;
+		
+		uint8_t _bg_color = 0x00;
+		bool _is_empty = true;
+
+		void init();
+		void set_bg_color( uint8_t new_bg_color );
+		void reset( uint32_t new_width, uint32_t new_height, uint32_t new_layers_count );
+		void flush();
+		void clear( uint8_t byte );
+		void set_pixel( uint32_t color, uint32_t x, uint32_t y, uint32_t z );
 
 		void init() {
 			main_hdc = CreateCompatibleDC( hdc );
@@ -32,43 +40,46 @@ namespace tamachi {
 			blend_function.BlendFlags = 0;
 			blend_function.SourceConstantAlpha = 0xFF;
 			blend_function.AlphaFormat = AC_SRC_ALPHA;
+
+			reset( screen::width, screen::height, 1 );
 		}
 
 		void set_bg_color( uint8_t new_bg_color=0x00 ) {
-			bg_color = new_bg_color;
-			memset( bg, bg_color, size * 4 );
-			is_changed = true;
+			_bg_color = new_bg_color;
+
+			if ( bg ) memset( bg, _bg_color, size * 4 );
+
+			_is_changed = true;
 		}
 
-		void reset( uint32_t new_width=320, uint32_t new_height=240, uint32_t new_layers_count=0 ) {
-			if ( !new_layers_count ) {
-				new_layers_count = layers_count;
+		void reset( uint32_t new_width=0, uint32_t new_height=0, uint32_t new_layers_count=0 ) {
+			if ( !new_width ) new_width = width;
+			if ( !new_height ) new_height = height;
+			if ( !new_layers_count ) new_layers_count = layers_count ? layers_count : 1;
 
-				if ( !new_layers_count ) new_layers_count = 1;
-			}
-
+			if ( main_bitmap ) DeleteObject( main_bitmap );
 			if ( bg ) VirtualFree( bg, 0, MEM_RELEASE );
-			if ( layers ) VirtualFree( layers, 0, MEM_RELEASE );
 			if ( layer_bitmap ) DeleteObject( layer_bitmap );
+			if ( layers ) VirtualFree( layers, 0, MEM_RELEASE );
 
 			width = new_width;
 			height = new_height;
 			size = width * height;
 
 			bg = VirtualAlloc( 0, size * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
-			
-			set_bg_color( 0x00 );
+			set_bg_color( _bg_color );
 
-			layers = VirtualAlloc( 0, new_layers_count * size * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
 			layers_count = new_layers_count;
-
+			layers = VirtualAlloc( 0, layers_count * size * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
+			
 			main_bitmap = CreateCompatibleBitmap( hdc, width, height );
 			SelectObject( main_hdc, main_bitmap );
 
 			layer_bitmap = CreateCompatibleBitmap( hdc, width, height );
 			SelectObject( layer_hdc, layer_bitmap );
 
-			is_changed = true;
+			_is_changed = true;
+			_is_updated = true;
 		}
 
 		void flush() {
@@ -85,22 +96,22 @@ namespace tamachi {
 
 			StretchBlt( hdc, 0, 0, screen::width, screen::height, main_hdc, 0, 0, width, height, SRCCOPY );
 			
-			is_changed = false;
+			_is_changed = false;
 		}
 
 		void clear( uint8_t byte=0 ) {
 			if ( !layers ) return;
-			if ( is_empty ) return;
+			if ( _is_empty ) return;
 
 			memset( layers, byte, layers_count * size * 4 );
 
-			is_empty = true;
-			is_changed = true;
+			_is_empty = true;
+			_is_changed = true;
 		}
 
 		void set_pixel( uint32_t color, uint32_t x, uint32_t y, uint32_t z=0 ) {
 			if ( !layers ) return;
-			if ( x > width || y > height ) return;
+			if ( x > width || y > height || z >= layers_count ) return;
 
 			uint64_t shift = y * width + x;
 			uint32_t* pos = reinterpret_cast<uint32_t*>( layers ) + z * size;
@@ -116,8 +127,8 @@ namespace tamachi {
 
 			*( pos + shift ) = A << 24 | R << 16 | G << 8 | B;
 
-			is_empty = false;
-			is_changed = true;
+			_is_empty = false;
+			_is_changed = true;
 		}
 
 	}

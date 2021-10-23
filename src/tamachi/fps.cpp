@@ -5,14 +5,12 @@ namespace tamachi {
 	namespace fps {
 
 		uint32_t _interval = 0;
-		std::function<void( double )> _handler;
+		std::function<void( double )> _handler = NULL;
 		std::chrono::steady_clock::time_point _last;
 		uint64_t _count = 0;
 		uint64_t _value = 0;
 
-		void start( uint32_t interval=0, std::function<void( double )> handler=NULL ) {
-			_interval = interval;
-			_handler = handler;
+		void start() {
 			_last = std::chrono::steady_clock::now();
 		}
 
@@ -33,6 +31,14 @@ namespace tamachi {
 
 		uint64_t get() {
 			return _value;
+		}
+
+		void set_interval( uint32_t interval=0 ) {
+			_interval = interval;
+		}
+
+		void on_interval( std::function<void( double )> handler ) {
+			_handler = handler;
 		}
 
 	}

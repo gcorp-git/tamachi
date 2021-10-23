@@ -18,9 +18,14 @@ namespace tamachi {
 	MSG message;
 	BITMAPINFO bmi;
 
-	bool is_running = false;
-	bool is_changed = false;
+	bool _is_inited = false;
+	bool _is_running = false;
+	bool _is_changed = false;
+	bool _is_updated = false;
 
+	std::function<void()> _on_start;
+	std::function<void()> _on_stop;
+	std::function<void()> _on_update;
 	std::function<void( double )> _on_frame;
 
 }

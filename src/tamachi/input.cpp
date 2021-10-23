@@ -37,8 +37,8 @@ namespace tamachi {
 
 		bool process( MSG* message ) {
 			switch ( message->message ) {
-				case WM_LBUTTONDOWN:
-				case WM_RBUTTONDOWN:
+				// case WM_LBUTTONDOWN:
+				// case WM_RBUTTONDOWN:
 				case WM_SYSKEYUP:
 				case WM_SYSKEYDOWN:
 				case WM_KEYUP:

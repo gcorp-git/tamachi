@@ -34,7 +34,8 @@ namespace tamachi {
 			
 			SetWindowPos( window, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED );
 			
-			is_changed = true;
+			_is_changed = true;
+			_is_updated = true;
 		}
 
 		void disable_fullscreen() {
@@ -50,7 +51,8 @@ namespace tamachi {
 
 			SetWindowPos( window, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_FRAMECHANGED );
 			
-			is_changed = true;
+			_is_changed = true;
+			_is_updated = true;
 		}
 
 		void toggle_fullscreen() {
@@ -65,8 +67,6 @@ namespace tamachi {
 			_on_resize( new_width, new_height );
 
 			if ( !is_fullscreen ) SetWindowPos( window, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_FRAMECHANGED );
-
-			is_changed = true;
 		}
 
 		void _on_resize( uint32_t new_width, uint32_t new_height ) {
@@ -76,6 +76,9 @@ namespace tamachi {
 			if ( !is_fullscreen ) {
 				width = window_width;
 				height = window_height;
+
+				_is_changed = true;
+				_is_updated = true;
 			}
 		}
 
