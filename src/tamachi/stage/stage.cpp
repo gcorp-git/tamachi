@@ -2,6 +2,7 @@
 
 #include "../head.cpp"
 #include "buffer.cpp"
+#include "cursor.cpp"
 #include "input.cpp"
 
 
@@ -141,6 +142,9 @@ namespace tamachi {
 			if ( !ok ) {
 				// todo: DestroyWindow error - use GetLastError()
 			}
+
+			_is_changed = true;
+			_is_updated = true;
 		}
 
 		bool is_created() { return _is_created; }
@@ -190,6 +194,7 @@ namespace tamachi {
 			if ( is_created ) stage::destroy();
 
 			buffer::reset();
+			cursor::reset();
 			input::reset();
 		}
 

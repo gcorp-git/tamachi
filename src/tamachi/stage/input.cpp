@@ -73,7 +73,7 @@ namespace tamachi {
 				case WM_MOUSEWHEEL: {
 					auto delta = GET_WHEEL_DELTA_WPARAM( message->wParam );
 
-					_listeners->dispatch( "mousewheel", delta );
+					_listeners->dispatch( "mousewheel", delta / WHEEL_DELTA );
 				} break;
 				default: {
 					return false;

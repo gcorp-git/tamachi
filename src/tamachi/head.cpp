@@ -10,7 +10,6 @@
 #include <chrono>
 #include <vector>
 #include <unordered_map>
-#include <d2d1.h>
 
 
 namespace tamachi {

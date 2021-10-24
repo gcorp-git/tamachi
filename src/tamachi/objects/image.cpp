@@ -46,11 +46,21 @@ namespace tamachi {
 						file.read( reinterpret_cast<char*>( &B ), sizeof(uint8_t) );
 						file.read( reinterpret_cast<char*>( &A ), sizeof(uint8_t) );
 
-						color = 0;
-						color = color | A;
-						color = ( color << 8 ) | R;
-						color = ( color << 8 ) | G;
-						color = ( color << 8 ) | B;
+						// original color:
+
+						// color = 0;
+						// color = color | A;
+						// color = ( color << 8 ) | R;
+						// color = ( color << 8 ) | G;
+						// color = ( color << 8 ) | B;
+
+						// premultiplied by alpha:
+
+						R = R * A / 0xFF;
+						G = G * A / 0xFF;
+						B = B * A / 0xFF;
+
+						color = A << 24 | R << 16 | G << 8 | B;
 
 						palette[ i ] = color;
 					}

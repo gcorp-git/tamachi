@@ -1,6 +1,6 @@
 #pragma once
 
-#include "head.cpp"
+#include "../head.cpp"
 
 
 namespace tamachi {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "head.cpp"
-#include "objects/image.cpp"
+#include "../head.cpp"
+#include "../objects/image.cpp"
 
 
 namespace tamachi {

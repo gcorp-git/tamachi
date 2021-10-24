@@ -1,11 +1,8 @@
 #pragma once
 
-#include "cursor.cpp"
 #include "fps.cpp"
-#include "images.cpp"
-#include "paint.cpp"
-#include "tiles.cpp"
-
+#include "factories/images.cpp"
+#include "factories/tiles.cpp"
 #include "stage/stage.cpp"
 
 
@@ -78,13 +75,17 @@ namespace tamachi {
 
 		if ( _on_stop ) _on_stop();
 
-		cursor::reset();
 		stage::reset();
 		tiles::reset();
 	}
 
 	void frame( double delta ) {
-		if ( _is_updated && _on_update ) _on_update();
+		if ( _is_updated ) {
+			tiles::update();
+
+			if ( _on_update ) _on_update();
+		}
+
 		if ( _on_frame ) _on_frame( delta );
 	
 		stage::frame( delta );

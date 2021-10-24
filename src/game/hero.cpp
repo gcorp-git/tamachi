@@ -13,7 +13,7 @@ namespace game {
 
 		double x = 0;
 		double y = 0;
-		uint32_t z = 2;
+		uint32_t z = 3;
 
 		std::unordered_map<std::string, uint64_t> _listeners = {};
 
@@ -39,6 +39,30 @@ namespace game {
 			_listeners["mouseup"] = tamachi::input::on( "mouseup", []( int64_t key ){
 				if ( key == VK_LBUTTON ) std::cout << "mouse::left up" << std::endl;
 			});
+
+			_listeners["mousewheel"] = tamachi::input::on( "mousewheel", []( int64_t delta ){
+				if ( delta < 0 ) {
+					std::cout << "scroll down " << delta << std::endl;
+				} else {
+					std::cout << "scroll up " << delta << std::endl;
+				}
+			});
+
+			auto red = tamachi::images::get( "assets/images/red" );
+			auto green = tamachi::images::get( "assets/images/green" );
+			auto blue = tamachi::images::get( "assets/images/blue" );
+
+			tiles["red"] = tamachi::tiles::create( red );
+			tiles["red"]->place( 50, 50, 0 );
+			tiles["red"]->show();
+
+			tiles["green"] = tamachi::tiles::create( green );
+			tiles["green"]->place( 52, 52, 1 );
+			tiles["green"]->show();
+
+			tiles["blue"] = tamachi::tiles::create( blue );
+			tiles["blue"]->place( 54, 54, 2 );
+			tiles["blue"]->show();
 
 			_is_created = true;
 		}

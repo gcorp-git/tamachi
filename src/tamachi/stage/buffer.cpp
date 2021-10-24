@@ -19,13 +19,16 @@ namespace tamachi {
 		
 		HDC _bg_hdc;
 		HBITMAP _bg_bitmap;
-		HDC _layers_hdc;
-		HBITMAP _layers_bitmap;
+
+		std::vector<HDC> _layers_hdcs = {};
 
 		HWND _window;
 		HDC _hdc;
 
 		uint8_t _bg_color = 0x00;
+
+		uint32_t _last_render_width = 0;
+		uint32_t _last_render_height = 0;
 
 		bool _is_empty = true;
 		bool _is_inited = false;
@@ -35,8 +38,8 @@ namespace tamachi {
 		void create();
 		void destroy();
 		void resize( uint32_t new_width, uint32_t new_height, uint32_t new_layers_count );
-		void clear( uint8_t byte );
-		void set_pixel( uint32_t color, uint32_t x, uint32_t y, uint32_t z );
+		void clear( uint32_t width, uint32_t height, uint32_t x, uint32_t y, uint32_t z );
+		void draw_bitmap(  void* memory, uint32_t width, uint32_t height, uint32_t x, uint32_t y, uint32_t z );
 		void set_bg_color( uint8_t new_bg_color );
 		uint32_t get_width();
 		uint32_t get_height();
@@ -71,7 +74,6 @@ namespace tamachi {
 			_hdc = hdc;
 
 			_bg_hdc = CreateCompatibleDC( _hdc );
-			_layers_hdc = CreateCompatibleDC( _hdc );
 		}
 
 		void destroy() {
@@ -82,16 +84,25 @@ namespace tamachi {
 
 			if ( _bg_bitmap ) DeleteObject( _bg_bitmap );
 			if ( _bg_memory ) VirtualFree( _bg_memory, 0, MEM_RELEASE );
-			if ( _layers_bitmap ) DeleteObject( _layers_bitmap );
+			
+			DeleteDC( _bg_hdc );
+
 			if ( _layers_memory ) VirtualFree( _layers_memory, 0, MEM_RELEASE );
+			
+			for ( auto hdc : _layers_hdcs ) DeleteDC( hdc );
+
+			_layers_hdcs.clear();
 
 			_width = 0;
 			_height = 0;
 			_size = 0;
 			_layers_count = 0;
 
-			ReleaseDC( _window, _bg_hdc );
-			ReleaseDC( _window, _layers_hdc );
+			_last_render_width = 0;
+			_last_render_height = 0;
+
+			_is_changed = true;
+			_is_updated = true;
 		}
 
 		void resize( uint32_t new_width=0, uint32_t new_height=0, uint32_t new_layers_count=0 ) {
@@ -101,7 +112,7 @@ namespace tamachi {
 
 			if ( _bg_bitmap ) DeleteObject( _bg_bitmap );
 			if ( _bg_memory ) VirtualFree( _bg_memory, 0, MEM_RELEASE );
-			if ( _layers_bitmap ) DeleteObject( _layers_bitmap );
+
 			if ( _layers_memory ) VirtualFree( _layers_memory, 0, MEM_RELEASE );
 
 			_width = new_width;
@@ -117,40 +128,42 @@ namespace tamachi {
 			_bg_bitmap = CreateCompatibleBitmap( _hdc, _width, _height );
 			SelectObject( _bg_hdc, _bg_bitmap );
 
-			_layers_bitmap = CreateCompatibleBitmap( _hdc, _width, _height );
-			SelectObject( _layers_hdc, _layers_bitmap );
+			for ( uint32_t z = 0; z < _layers_count; ++z ) {
+				auto hdc = CreateCompatibleDC( _hdc );
+				auto bitmap = CreateCompatibleBitmap( _hdc, _width, _height );
+
+				SelectObject( hdc, bitmap );
+
+				_layers_hdcs.push_back( hdc );
+			}
 
 			_is_changed = true;
 			_is_updated = true;
 		}
 
-		void clear() {
-			if ( !_layers_memory ) return;
+		void clear( uint32_t width, uint32_t height, uint32_t x, uint32_t y, uint32_t z=0 ) {
 			if ( _is_empty ) return;
 
-			memset( _layers_memory, 0, _layers_count * _size * 4 );
+			_bmi.bmiHeader.biWidth = _width;
+			_bmi.bmiHeader.biHeight = -_height;
+
+			StretchDIBits( _layers_hdcs[ z ], x, y, width, height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+
+			_bmi.bmiHeader.biWidth = _width;
+			_bmi.bmiHeader.biHeight = -_height;
 
 			_is_empty = true;
 			_is_changed = true;
 		}
 
-		void set_pixel( uint32_t color, uint32_t x, uint32_t y, uint32_t z=0 ) {
-			if ( !_layers_memory ) return;
-			if ( x > _width || y > _height || z >= _layers_count ) return;
+		void draw_bitmap( void* memory, uint32_t width, uint32_t height, uint32_t x, uint32_t y, uint32_t z=0 ) {
+			_bmi.bmiHeader.biWidth = width;
+			_bmi.bmiHeader.biHeight = -height;
 
-			uint64_t shift = y * _width + x;
-			uint32_t* pos = reinterpret_cast<uint32_t*>( _layers_memory ) + z * _size;
-
-			uint8_t A = ( color >> 24 ) & 0xFF;
-			uint8_t R = ( color >> 16 ) & 0xFF;
-			uint8_t G = ( color >>  8 ) & 0xFF;
-			uint8_t B = ( color >>  0 ) & 0xFF;
-
-			R = R * A / 0xFF;
-			G = G * A / 0xFF;
-			B = B * A / 0xFF;
-
-			*( pos + shift ) = A << 24 | R << 16 | G << 8 | B;
+			StretchDIBits( _layers_hdcs[ z ], x, y, width, height, 0, 0, width, height, memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+			
+			_bmi.bmiHeader.biWidth = _width;
+			_bmi.bmiHeader.biHeight = -_height;
 
 			_is_empty = false;
 			_is_changed = true;
@@ -175,15 +188,14 @@ namespace tamachi {
 			_bmi.bmiHeader.biWidth = _width;
 			_bmi.bmiHeader.biHeight = -_height;
 
-			StretchDIBits( hdc, 0, 0, width, height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
-			
+			if ( _last_render_width != width || _last_render_height != height ) {
+				StretchDIBits( hdc, 0, 0, width, height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+			}
+
 			StretchDIBits( _bg_hdc, 0, 0, _width, _height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
 			
 			for ( int64_t z = 0; z < _layers_count; ++z ) {
-				void* layer = reinterpret_cast<void*>( reinterpret_cast<uint8_t*>( _layers_memory ) + z * _size * 4 );
-
-				StretchDIBits( _layers_hdc, 0, 0, _width, _height, 0, 0, _width, _height, layer, &_bmi, DIB_RGB_COLORS, SRCCOPY );
-				AlphaBlend( _bg_hdc, 0, 0, _width, _height, _layers_hdc, 0, 0, _width, _height, _blend_function );
+				AlphaBlend( _bg_hdc, 0, 0, _width, _height, _layers_hdcs[ z ], 0, 0, _width, _height, _blend_function );
 			}
 
 			double rw = static_cast<double>( width ) / static_cast<double>( _width );
@@ -194,6 +206,9 @@ namespace tamachi {
 			uint32_t dy = 0.5 * ( height - scale * _height );
 
 			StretchBlt( hdc, dx, dy, width - 2 * dx, height - 2 * dy, _bg_hdc, 0, 0, _width, _height, SRCCOPY );
+		
+			_last_render_width = width;
+			_last_render_height = height;
 		}
 
 		void reset() {
@@ -203,8 +218,6 @@ namespace tamachi {
 
 			_bg_color = 0x00;
 			_is_empty = true;
-
-			_is_inited = false;
 		}
 
 	}

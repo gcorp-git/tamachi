@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../head.cpp"
+#include "../stage/buffer.cpp"
 #include "image.cpp"
 
 
@@ -75,6 +76,13 @@ namespace tamachi {
 			_is_visible = false;
 		}
 
+		void update() {
+			if ( !_is_visible ) return;
+
+			_clear();
+			_render();
+		}
+
 		bool is_ok() {
 			return _is_ok;
 		}
@@ -95,25 +103,11 @@ namespace tamachi {
 		uint32_t _z = 0;
 
 		void _render() {
-			auto p = reinterpret_cast<uint32_t*>( _image->bitmap );
-			
-			uint32_t color;
-
-			for ( uint32_t iy = 0; iy < _dh; ++iy ) {
-				for ( uint32_t ix = 0; ix < _dw; ++ix ) {
-					color = *( p + ( _dy + iy ) * _image->width + ( _dx + ix ) );
-
-					buffer::set_pixel( color, _x + ix, _y + iy, _z );
-				}
-			}
+			buffer::draw_bitmap( _image->bitmap, _image->width, _image->height, _x, _y, _z );
 		}
 
 		void _clear() {
-			for ( uint32_t iy = 0; iy < _dh; ++iy ) {
-				for ( uint32_t ix = 0; ix < _dw; ++ix ) {
-					buffer::set_pixel( 0, _x + ix, _y + iy, _z );
-				}
-			}
+			buffer::clear( _image->width, _image->height, _x, _y, _z );
 		}
 
 	};
