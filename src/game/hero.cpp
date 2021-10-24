@@ -72,6 +72,12 @@ namespace game {
 
 			for ( auto it : _listeners ) tamachi::input::off( it.first, it.second );
 
+			dx = 0;
+			dy = 0;
+
+			x = 0;
+			y = 0;
+
 			_is_created = false;
 		}
 

@@ -12,7 +12,6 @@ namespace tamachi {
 		uint32_t _layers_count = 0;
 
 		void* _bg_memory = nullptr;
-		void* _layers_memory = nullptr;
 
 		BITMAPINFO _bmi = {};
 		BLENDFUNCTION _blend_function = {};
@@ -82,14 +81,22 @@ namespace tamachi {
 
 			_is_created = false;
 
+			DeleteDC( _bg_hdc );
+
 			if ( _bg_bitmap ) DeleteObject( _bg_bitmap );
 			if ( _bg_memory ) VirtualFree( _bg_memory, 0, MEM_RELEASE );
 			
-			DeleteDC( _bg_hdc );
+			HDC layer_hdc;
+			HGDIOBJ prev_bitmap;
 
-			if ( _layers_memory ) VirtualFree( _layers_memory, 0, MEM_RELEASE );
-			
-			for ( auto hdc : _layers_hdcs ) DeleteDC( hdc );
+			for ( uint32_t z = 0; z < _layers_count; ++z ) {
+				layer_hdc = _layers_hdcs[ z ];
+				prev_bitmap = GetCurrentObject( layer_hdc, OBJ_BITMAP );
+
+				DeleteDC( layer_hdc );
+
+				if ( prev_bitmap ) DeleteObject( prev_bitmap );
+			}
 
 			_layers_hdcs.clear();
 
@@ -110,10 +117,7 @@ namespace tamachi {
 			if ( !new_height ) new_height = _height;
 			if ( !new_layers_count ) new_layers_count = _layers_count ? _layers_count : 1;
 
-			if ( _bg_bitmap ) DeleteObject( _bg_bitmap );
 			if ( _bg_memory ) VirtualFree( _bg_memory, 0, MEM_RELEASE );
-
-			if ( _layers_memory ) VirtualFree( _layers_memory, 0, MEM_RELEASE );
 
 			_width = new_width;
 			_height = new_height;
@@ -123,18 +127,31 @@ namespace tamachi {
 			set_bg_color( _bg_color );
 
 			_layers_count = new_layers_count;
-			_layers_memory = VirtualAlloc( 0, _layers_count * _size * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
 			
+			HGDIOBJ bitmap;
+			HGDIOBJ prev_bitmap;
+
 			_bg_bitmap = CreateCompatibleBitmap( _hdc, _width, _height );
-			SelectObject( _bg_hdc, _bg_bitmap );
+			prev_bitmap = SelectObject( _bg_hdc, _bg_bitmap );
+			
+			if ( prev_bitmap ) DeleteObject( prev_bitmap );
+
+			for ( auto hdc : _layers_hdcs ) DeleteDC( hdc );
+
+			_layers_hdcs.clear();
+
+			HDC layer_hdc;
 
 			for ( uint32_t z = 0; z < _layers_count; ++z ) {
-				auto hdc = CreateCompatibleDC( _hdc );
-				auto bitmap = CreateCompatibleBitmap( _hdc, _width, _height );
+				if ( z >= _layers_hdcs.size() ) {
+					layer_hdc = CreateCompatibleDC( _hdc );
+					_layers_hdcs.push_back( layer_hdc );
+				}
 
-				SelectObject( hdc, bitmap );
+				bitmap = CreateCompatibleBitmap( _hdc, _width, _height );
+				prev_bitmap = SelectObject( _layers_hdcs[ z ], bitmap );
 
-				_layers_hdcs.push_back( hdc );
+				if ( prev_bitmap ) DeleteObject( prev_bitmap );
 			}
 
 			_is_changed = true;
@@ -181,8 +198,6 @@ namespace tamachi {
 		uint32_t get_height() { return _height; }
 
 		void render( HDC hdc, uint32_t width, uint32_t height ) {
-			if ( !_layers_memory ) return;
-
 			if ( !hdc ) hdc = _hdc;
 
 			_bmi.bmiHeader.biWidth = _width;
