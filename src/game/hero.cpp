@@ -32,11 +32,11 @@ namespace game {
 			tiles["hero"]->place( 0, 0, z );
 			tiles["hero"]->show();
 
-			_listeners["mousedown"] = tamachi::input::on( "mousedown", []( uint32_t key ){
+			_listeners["mousedown"] = tamachi::input::on( "mousedown", []( int64_t key ){
 				if ( key == VK_LBUTTON ) std::cout << "mouse::left down" << std::endl;
 			});
 
-			_listeners["mouseup"] = tamachi::input::on( "mouseup", []( uint32_t key ){
+			_listeners["mouseup"] = tamachi::input::on( "mouseup", []( int64_t key ){
 				if ( key == VK_LBUTTON ) std::cout << "mouse::left up" << std::endl;
 			});
 

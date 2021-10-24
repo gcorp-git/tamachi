@@ -3,8 +3,6 @@
 
 namespace game {
 
-	std::string title = "Game";
-
 	uint32_t WIDTH = 256;
 	uint32_t HEIGHT = 144;
 

@@ -17,7 +17,7 @@ namespace tamachi {
 		uint32_t _windowed_width = 0;
 		uint32_t _windowed_height = 0;
 
-		LPCTSTR _window_title = "Game Title";
+		LPCTSTR _window_title = "";
 
 		WNDCLASS _wc;
 		WINDOWPLACEMENT _prev_window_pos = { sizeof(_prev_window_pos) };
@@ -156,11 +156,11 @@ namespace tamachi {
 			}
 		}
 
-		void frame() {
+		void frame( double delta ) {
 			if ( !_is_created ) return;
 			if ( !_is_changed ) return;
 
-			buffer::render( _width, _height );
+			buffer::render( _hdc, _width, _height );
 		}
 
 		void rename( std::string title ) {
@@ -214,11 +214,8 @@ namespace tamachi {
 			switch ( uMsg ) {
 				case WM_PAINT: {
 					PAINTSTRUCT paint;
-			
-					HDC deviceContext = BeginPaint( _window, &paint );
-
-					// todo: WM_PAINT
-
+					HDC hdc = BeginPaint( _window, &paint );
+					buffer::render( hdc, _width, _height );
 					EndPaint( _window, &paint );
 				} break;
 				case WM_DISPLAYCHANGE:

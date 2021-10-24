@@ -15,12 +15,9 @@ namespace game {
 	void _on_frame( double delta );
 
 	void init() {
-		tamachi::stage::rename( title );
-
 		tamachi::fps::set_interval( 1.0 );
 		tamachi::fps::on_interval([]( uint64_t value ){
-			tamachi::stage::rename( std::to_string( value ) );
-			// std::cout << value << std::endl;
+			tamachi::stage::rename( "FPS: " + std::to_string( value ) );
 		});
 
 		tamachi::on_start( _on_start );

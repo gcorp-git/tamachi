@@ -22,6 +22,7 @@ namespace tamachi {
 	void init( HINSTANCE hInstance, LPSTR lpCmdLine );
 	void start();
 	void stop();
+	void frame( double delta );
 	void on_start( std::function<void()> handler );
 	void on_stop( std::function<void()> handler );
 	void on_update( std::function<void()> handler );
@@ -60,20 +61,11 @@ namespace tamachi {
 
 			auto now = std::chrono::steady_clock::now();
 			auto mcs = std::chrono::duration_cast<std::chrono::microseconds>( now - last );
-			
 			double delta = static_cast<double>( mcs.count() ) / 1000000;
 
 			if ( delta > 0.015 ) {
+				frame( delta );
 				last = now;
-
-				if ( _is_updated && _on_update ) _on_update();
-				if ( _on_frame ) _on_frame( delta );
-			
-				stage::frame();
-				fps::frame( delta );
-
-				_is_changed = false;
-				_is_updated = false;
 			}
 		}
 	}
@@ -89,6 +81,17 @@ namespace tamachi {
 		cursor::reset();
 		stage::reset();
 		tiles::reset();
+	}
+
+	void frame( double delta ) {
+		if ( _is_updated && _on_update ) _on_update();
+		if ( _on_frame ) _on_frame( delta );
+	
+		stage::frame( delta );
+		fps::frame( delta );
+
+		_is_changed = false;
+		_is_updated = false;
 	}
 
 	void on_start( std::function<void()> handler ) { _on_start = handler; }

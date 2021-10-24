@@ -14,13 +14,13 @@ namespace tamachi {
 		const int KEYS_SIZE = 256;
 		bool keys[ KEYS_SIZE ] = {};
 
-		auto _listeners = new Listeners<uint32_t>();
+		auto _listeners = new Listeners<int64_t>();
 
 		bool _is_enabled = false;
 
 		void enable();
 		void disable();
-		uint64_t on( std::string event, std::function<void(uint32_t)> listener );
+		uint64_t on( std::string event, std::function<void(int64_t)> listener );
 		void off( std::string event, uint64_t id );
 		bool process( MSG* message );
 		void reset();
@@ -43,7 +43,7 @@ namespace tamachi {
 			//
 		}
 
-		uint64_t on( std::string event, std::function<void(uint32_t)> listener ) {
+		uint64_t on( std::string event, std::function<void(int64_t)> listener ) {
 			return _listeners->on( event, listener );
 		}
 
@@ -71,7 +71,9 @@ namespace tamachi {
 					_process_mouse( message );
 				} break;
 				case WM_MOUSEWHEEL: {
-					// todo: WM_MOUSEWHEEL
+					auto delta = GET_WHEEL_DELTA_WPARAM( message->wParam );
+
+					_listeners->dispatch( "mousewheel", delta );
 				} break;
 				default: {
 					return false;

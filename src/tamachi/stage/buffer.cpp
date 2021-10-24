@@ -167,13 +167,15 @@ namespace tamachi {
 		uint32_t get_width() { return _width; }
 		uint32_t get_height() { return _height; }
 
-		void render( uint32_t width, uint32_t height ) {
+		void render( HDC hdc, uint32_t width, uint32_t height ) {
 			if ( !_layers_memory ) return;
+
+			if ( !hdc ) hdc = _hdc;
 
 			_bmi.bmiHeader.biWidth = _width;
 			_bmi.bmiHeader.biHeight = -_height;
 
-			StretchDIBits( _hdc, 0, 0, width, height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+			StretchDIBits( hdc, 0, 0, width, height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
 			
 			StretchDIBits( _bg_hdc, 0, 0, _width, _height, 0, 0, _width, _height, _bg_memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
 			
@@ -184,14 +186,14 @@ namespace tamachi {
 				AlphaBlend( _bg_hdc, 0, 0, _width, _height, _layers_hdc, 0, 0, _width, _height, _blend_function );
 			}
 
-			double rw = width / _width;
-			double rh = height / _height;
+			double rw = static_cast<double>( width ) / static_cast<double>( _width );
+			double rh = static_cast<double>( height ) / static_cast<double>( _height );
 			double scale = rw < rh ? rw : rh;
 
 			uint32_t dx = 0.5 * ( width - scale * _width );
 			uint32_t dy = 0.5 * ( height - scale * _height );
 
-			StretchBlt( _hdc, dx, dy, width - 2 * dx, height - 2 * dy, _bg_hdc, 0, 0, _width, _height, SRCCOPY );
+			StretchBlt( hdc, dx, dy, width - 2 * dx, height - 2 * dy, _bg_hdc, 0, 0, _width, _height, SRCCOPY );
 		}
 
 		void reset() {
