@@ -83,7 +83,7 @@ namespace tamachi {
 		bool _is_ok = false;
 		bool _is_visible = false;
 
-		Image* _image = NULL;
+		Image* _image = nullptr;
 
 		uint32_t _dx = 0;
 		uint32_t _dy = 0;

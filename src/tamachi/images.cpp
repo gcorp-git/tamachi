@@ -24,13 +24,7 @@ namespace tamachi {
 		Image* get( std::string path ) {
 			auto found = _storage.find( path );
 
-			return found != _storage.end() ? _storage[ path ] : NULL;
-		}
-
-		void reset() {
-			for ( auto it : _storage ) delete it.second;
-
-			_storage.clear();
+			return found != _storage.end() ? _storage[ path ] : nullptr;
 		}
 
 	}

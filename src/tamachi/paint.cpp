@@ -1,6 +1,7 @@
 #pragma once
 
 #include "head.cpp"
+#include "stage/buffer.cpp"
 #include "objects/image.cpp"
 
 
@@ -12,8 +13,11 @@ namespace tamachi {
 		}
 
 		void rect( uint32_t color, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t z, bool fill=false ) {
-			if ( x + w > buffer::width ) w = buffer::width - x;
-			if ( y + h > buffer::height ) h = buffer::height - y;
+			auto buffer_width = buffer::get_width();
+			auto buffer_height = buffer::get_height();
+
+			if ( x + w > buffer_width ) w = buffer_width - x;
+			if ( y + h > buffer_height ) h = buffer_height - y;
 
 			if ( fill ) {
 				for ( uint32_t iy = y; iy < y + h; ++iy ) {

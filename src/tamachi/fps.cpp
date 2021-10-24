@@ -4,26 +4,22 @@
 namespace tamachi {
 	namespace fps {
 
-		uint32_t _interval = 0;
-		std::function<void( double )> _handler = NULL;
-		std::chrono::steady_clock::time_point _last;
+		double _duration = 0;
+		double _interval = 0;
+		
+		std::function<void( double )> _handler = nullptr;
+
 		uint64_t _count = 0;
 		uint64_t _value = 0;
 
-		void start() {
-			_last = std::chrono::steady_clock::now();
-		}
-
-		void frame() {
+		void frame( double delta ) {
 			_count++;
+			_duration += delta;
 
-			auto now = std::chrono::steady_clock::now();
-			auto delta = std::chrono::duration_cast<std::chrono::milliseconds>( now - _last );
-
-			if ( delta.count() > _interval ) {
+			if ( _duration > _interval ) {
 				_value = _count;
 				_count = 0;
-				_last = now;
+				_duration = 0;
 
 				if ( _handler ) _handler( _value );
 			}
@@ -33,7 +29,7 @@ namespace tamachi {
 			return _value;
 		}
 
-		void set_interval( uint32_t interval=0 ) {
+		void set_interval( double interval=0 ) {
 			_interval = interval;
 		}
 

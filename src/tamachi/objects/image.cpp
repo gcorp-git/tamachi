@@ -10,7 +10,7 @@ namespace tamachi {
 		uint32_t width = 0;
 		uint32_t height = 0;
 		
-		void* bitmap = NULL;
+		void* bitmap = nullptr;
 
 		Image( std::string filename ) {
 			std::ifstream file( ( filename + ".tamachi-image" ).c_str(), std::ios::in | std::ios::binary );

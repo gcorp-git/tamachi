@@ -2,10 +2,9 @@
 
 
 int WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) {
-	game::init( hInstance, lpCmdLine );
-
-	game::start();
-	game::stop();
+	tamachi::init( hInstance, lpCmdLine );
+	game::init();
+	tamachi::start();
 
 	return 0;
 }
