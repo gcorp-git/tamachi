@@ -29,8 +29,11 @@ namespace game {
 			auto pico = tamachi::images::get( "assets/images/pico" );
 			
 			tiles["hero"] = tamachi::tiles::create( pico );
-			tiles["hero"]->place( 0, 0, z );
-			tiles["hero"]->show();
+			tiles["hero"]->x = static_cast<uint32_t>( x );
+			tiles["hero"]->y = static_cast<uint32_t>( y );
+			tiles["hero"]->z = z;
+			tiles["hero"]->visible = true;
+			tamachi::canvas::render( tiles["hero"] );
 
 			_listeners["mousedown"] = tamachi::input::on( "mousedown", []( int64_t key ){
 				if ( key == VK_LBUTTON ) std::cout << "mouse::left down" << std::endl;
@@ -53,16 +56,25 @@ namespace game {
 			auto blue = tamachi::images::get( "assets/images/blue" );
 
 			tiles["red"] = tamachi::tiles::create( red );
-			tiles["red"]->place( 50, 50, 0 );
-			tiles["red"]->show();
+			tiles["red"]->x = 50;
+			tiles["red"]->y = 50;
+			tiles["red"]->z = 0;
+			tiles["red"]->visible = true;
+			tamachi::canvas::render( tiles["red"] );
 
 			tiles["green"] = tamachi::tiles::create( green );
-			tiles["green"]->place( 52, 52, 1 );
-			tiles["green"]->show();
+			tiles["green"]->x = 52;
+			tiles["green"]->y = 52;
+			tiles["green"]->z = 1;
+			tiles["green"]->visible = true;
+			tamachi::canvas::render( tiles["green"] );
 
 			tiles["blue"] = tamachi::tiles::create( blue );
-			tiles["blue"]->place( 54, 54, 2 );
-			tiles["blue"]->show();
+			tiles["blue"]->x = 54;
+			tiles["blue"]->y = 54;
+			tiles["blue"]->z = 2;
+			tiles["blue"]->visible = true;
+			tamachi::canvas::render( tiles["blue"] );
 
 			_is_created = true;
 		}
@@ -109,10 +121,9 @@ namespace game {
 			if ( y < 0 ) y = 0;
 			if ( y > HEIGHT - 8 ) y = HEIGHT - 8;
 
-			int32_t nx = static_cast<int32_t>( x );
-			int32_t ny = static_cast<int32_t>( y );
-
-			tiles["hero"]->place( nx, ny, z );
+			tiles["hero"]->x = static_cast<uint32_t>( x );
+			tiles["hero"]->y = static_cast<uint32_t>( y );
+			tamachi::canvas::render( tiles["hero"] );
 		}
 
 	}

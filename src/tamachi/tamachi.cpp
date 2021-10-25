@@ -1,9 +1,9 @@
 #pragma once
 
-#include "fps.cpp"
 #include "factories/images.cpp"
 #include "factories/tiles.cpp"
 #include "stage/stage.cpp"
+#include "utils/fps.cpp"
 
 
 namespace tamachi {
@@ -11,10 +11,9 @@ namespace tamachi {
 	bool _is_inited = false;
 	bool _is_started = false;
 
-	std::function<void()> _on_start = nullptr;
-	std::function<void()> _on_stop = nullptr;
-	std::function<void()> _on_update = nullptr;
-	std::function<void( double )> _on_frame = nullptr;
+	std::function<void()> _on_start = NULL;
+	std::function<void()> _on_stop = NULL;
+	std::function<void( double )> _on_frame = NULL;
 
 	void init( HINSTANCE hInstance, LPSTR lpCmdLine );
 	void start();
@@ -22,7 +21,6 @@ namespace tamachi {
 	void frame( double delta );
 	void on_start( std::function<void()> handler );
 	void on_stop( std::function<void()> handler );
-	void on_update( std::function<void()> handler );
 	void on_frame( std::function<void( double )> handler );
 
 	void init( HINSTANCE hInstance, LPSTR lpCmdLine ) {
@@ -32,7 +30,10 @@ namespace tamachi {
 
 		_hInstance = hInstance;
 
-		stage::init( stop );
+		stage::init();
+		stage::on( "close", []( bool nothing ){
+			stop();
+		});
 	}
 
 	void start() {
@@ -61,7 +62,11 @@ namespace tamachi {
 			double delta = static_cast<double>( mcs.count() ) / 1000000;
 
 			if ( delta > 0.015 ) {
-				frame( delta );
+				if ( _on_frame ) _on_frame( delta );
+			
+				stage::frame( delta );
+				fps::frame( delta );
+				
 				last = now;
 			}
 		}
@@ -79,25 +84,8 @@ namespace tamachi {
 		tiles::reset();
 	}
 
-	void frame( double delta ) {
-		if ( _is_updated ) {
-			tiles::update();
-
-			if ( _on_update ) _on_update();
-		}
-
-		if ( _on_frame ) _on_frame( delta );
-	
-		stage::frame( delta );
-		fps::frame( delta );
-
-		_is_changed = false;
-		_is_updated = false;
-	}
-
 	void on_start( std::function<void()> handler ) { _on_start = handler; }
 	void on_stop( std::function<void()> handler ) { _on_stop = handler; }
-	void on_update( std::function<void()> handler ) { _on_update = handler; }
 	void on_frame( std::function<void( double )> handler ) { _on_frame = handler; }
 
 }

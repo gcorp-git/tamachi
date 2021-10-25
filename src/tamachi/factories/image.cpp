@@ -10,7 +10,9 @@ namespace tamachi {
 		uint32_t width = 0;
 		uint32_t height = 0;
 		
-		void* bitmap = nullptr;
+		void* memory = nullptr;
+
+		bool ok = false;
 
 		Image( std::string filename ) {
 			std::ifstream file( ( filename + ".tamachi-image" ).c_str(), std::ios::in | std::ios::binary );
@@ -68,16 +70,16 @@ namespace tamachi {
 					uint8_t pixel;
 					uint64_t size = width * height;
 
-					bitmap = VirtualAlloc( 0, width * height * 4, MEM_COMMIT, PAGE_READWRITE );
+					memory = VirtualAlloc( 0, width * height * 4, MEM_COMMIT, PAGE_READWRITE );
 
-					auto pos = reinterpret_cast<uint32_t*>( bitmap );
+					auto pos = reinterpret_cast<uint32_t*>( memory );
 
 					for ( uint64_t i = 0; i < size; ++i ) {
 						file.read( reinterpret_cast<char*>( &pixel ), sizeof(uint8_t) );
 						*pos++ = palette[ pixel ];
 					}
 
-					_is_ok = true;
+					ok = true;
 				} break;
 				default: {
 					std::cout << "Image version is not supported: " << filename << std::endl;
@@ -87,16 +89,9 @@ namespace tamachi {
 		}
 
 		~Image() {
-			if ( bitmap ) VirtualFree( bitmap, 0, MEM_RELEASE );
+			if ( memory ) VirtualFree( memory, 0, MEM_RELEASE );
 		}
 
-		bool is_ok() {
-			return _is_ok;
-		}
-
-	private:
-		bool _is_ok = false;
-	
 	};
 
 }

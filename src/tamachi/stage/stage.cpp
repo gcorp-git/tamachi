@@ -1,13 +1,17 @@
 #pragma once
 
-#include "../head.cpp"
-#include "buffer.cpp"
+#include "head.cpp"
+#include "canvas.cpp"
 #include "cursor.cpp"
 #include "input.cpp"
+#include "../utils/listeners.cpp"
 
 
 namespace tamachi {
 	namespace stage {
+
+		bool _is_inited = false;
+		bool _is_created = false;
 
 		HWND _window;
 		HDC _hdc;
@@ -24,10 +28,7 @@ namespace tamachi {
 		WINDOWPLACEMENT _prev_window_pos = { sizeof(_prev_window_pos) };
 		MSG _message;
 
-		bool _is_inited = false;
-		bool _is_created = false;
-
-		std::function<void()> _on_close = nullptr;
+		auto _listeners = new Listeners<bool>();
 
 		void _soft_resize( uint32_t new_width, uint32_t new_height );
 		LRESULT CALLBACK _callback( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
@@ -84,12 +85,10 @@ namespace tamachi {
 
 		}
 
-		void init( std::function<void()> on_close ) {
+		void init() {
 			if ( _is_inited ) return;
 
 			_is_inited = true;
-
-			_on_close = on_close;
 
 			_wc = {};
 			_wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -98,7 +97,7 @@ namespace tamachi {
 
 			RegisterClass( &_wc );
 
-			buffer::init();
+			canvas::init();
 		}
 
 		void create( uint32_t new_width, uint32_t new_height ) {
@@ -124,7 +123,7 @@ namespace tamachi {
 
 			_hdc = GetDC( _window );
 
-			buffer::create( _window, _hdc );
+			canvas::attach( _hdc );
 			input::enable();
 		}
 
@@ -134,7 +133,7 @@ namespace tamachi {
 
 			_is_created = false;
 
-			buffer::destroy();
+			canvas::detach();
 			input::disable();
 
 			bool ok = DestroyWindow( _window );
@@ -149,6 +148,14 @@ namespace tamachi {
 
 		bool is_created() { return _is_created; }
 
+		uint64_t on( std::string event, std::function<void(bool)> listener ) {
+			return _listeners->on( event, listener );
+		}
+
+		void off( std::string event, uint64_t id ) {
+			_listeners->off( event, id );
+		}
+
 		void tick() {
 			if ( !_is_created ) return;
 
@@ -162,9 +169,12 @@ namespace tamachi {
 
 		void frame( double delta ) {
 			if ( !_is_created ) return;
-			if ( !_is_changed ) return;
 
-			buffer::render( _hdc, _width, _height );
+			if ( _is_updated ) _listeners->dispatch( "update", false );
+			if ( _is_changed ) canvas::flush( _hdc, MODE_CENTER, 0, 0, _width, _height );
+
+			_is_changed = false;
+			_is_updated = false;
 		}
 
 		void rename( std::string title ) {
@@ -193,7 +203,7 @@ namespace tamachi {
 
 			if ( is_created ) stage::destroy();
 
-			buffer::reset();
+			canvas::reset();
 			cursor::reset();
 			input::reset();
 		}
@@ -220,7 +230,7 @@ namespace tamachi {
 				case WM_PAINT: {
 					PAINTSTRUCT paint;
 					HDC hdc = BeginPaint( _window, &paint );
-					buffer::render( hdc, _width, _height );
+					canvas::flush( hdc, MODE_CENTER, 0, 0, _width, _height );
 					EndPaint( _window, &paint );
 				} break;
 				case WM_DISPLAYCHANGE:
@@ -230,7 +240,7 @@ namespace tamachi {
 					_soft_resize( rect.right - rect.left, rect.bottom - rect.top );
 				} break;
 				case WM_CLOSE: {
-					if ( _on_close ) _on_close();
+					_listeners->dispatch( "close", false );
 				} break;
 				case WM_DESTROY: {
 					PostQuitMessage( 0 );

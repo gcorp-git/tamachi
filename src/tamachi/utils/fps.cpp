@@ -1,6 +1,6 @@
 #pragma once
 
-#include "head.cpp"
+#include "../head.cpp"
 
 
 namespace tamachi {
@@ -9,7 +9,7 @@ namespace tamachi {
 		double _duration = 0;
 		double _interval = 0;
 		
-		std::function<void( double )> _handler = nullptr;
+		std::function<void( double )> _handler = NULL;
 
 		uint64_t _count = 0;
 		uint64_t _value = 0;

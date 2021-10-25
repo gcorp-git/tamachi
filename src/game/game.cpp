@@ -11,7 +11,6 @@ namespace game {
 	void stop();
 	void _on_start();
 	void _on_stop();
-	void _on_update();
 	void _on_frame( double delta );
 
 	void init() {
@@ -22,8 +21,11 @@ namespace game {
 
 		tamachi::on_start( _on_start );
 		tamachi::on_stop( _on_stop );
-		tamachi::on_update( _on_update );
 		tamachi::on_frame( _on_frame );
+
+		tamachi::stage::on( "update", []( bool nothing ){
+			// todo: on stage update
+		});
 
 		tamachi::images::load( paths_images );
 	}
@@ -33,18 +35,16 @@ namespace game {
 		// tamachi::cursor::hide();
 
 		tamachi::stage::resize( WIDTH, HEIGHT );
-		tamachi::buffer::resize( WIDTH, HEIGHT, 4 );
-		tamachi::buffer::set_bg_color( 0x00 );
 
+		tamachi::canvas::set_size( WIDTH, HEIGHT );
+		tamachi::canvas::set_depth( 4 );
+		tamachi::canvas::set_bg( 0x00 );
+		
 		hero::create();
 	}
 
 	void _on_stop() {
 		hero::destroy();
-	}
-
-	void _on_update() {
-		//
 	}
 
 	void _on_frame( double delta ) {

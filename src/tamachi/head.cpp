@@ -14,9 +14,6 @@
 
 namespace tamachi {
 
-	bool _is_changed = false;
-	bool _is_updated = false;
-
 	HINSTANCE _hInstance;
 
 }

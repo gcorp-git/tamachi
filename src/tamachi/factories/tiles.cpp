@@ -1,32 +1,55 @@
 #pragma once
 
-#include "../objects/tile.cpp"
+#include "../head.cpp"
+#include "../utils/storage.cpp"
+#include "../stage/canvas.cpp"
+#include "tile.cpp"
 
 
 namespace tamachi {
 	namespace tiles {
 
-		std::unordered_map<uint64_t, Tile*> _storage = {};
+		uint64_t _IDS = 0;
 
-		Tile* create( Image* image, uint32_t dx=0, uint32_t dy=0, uint32_t dw=0, uint32_t dh=0 ) {
-			if ( !image ) std::cout << "WARNING: tile got NULL instead of image";
+		auto _storage = new Storage<uint64_t, Tile*>();
 
-			auto tile = new Tile( image, dx, dy, dw, dh );
+		Tile* create( Image* image, uint32_t dx=0, uint32_t dy=0, uint32_t dw=0, uint32_t dh=0, uint32_t width=0, uint32_t height=0 ) {
+			if ( !image || !image->ok ) return nullptr;
 
-			_storage.insert_or_assign( tile->id, tile );
+			if ( !dw ) dw = image->width;
+			if ( !dh ) dh = image->height;
+
+			if ( !width ) width = image->width;
+			if ( !height ) height = image->height;
+
+			auto tile = new Tile();
+
+			tile->id = ++_IDS;
+			tile->image = image;
+			tile->dx = dx;
+			tile->dy = dy;
+			tile->dw = dw;
+			tile->dh = dh;
+			tile->width = width;
+			tile->height = height;
+
+			_storage->set( tile->id, tile );
 
 			return tile;
 		}
 
-		void update() {
-			for ( auto it : _storage ) it.second->update();
-		}
-		
-		void reset() {
-			for ( auto it : _storage ) delete it.second;
+		void destroy( Tile* tile ) {
+			tile->visible = false;
 
-			_storage.clear();
+			canvas::render( tile );
+
+			_storage->remove( tile->id );
+		}
+
+		void reset() {
+			_storage->clear();
 		}
 
 	}
+
 }
