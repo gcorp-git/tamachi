@@ -1,7 +1,8 @@
 #pragma once
 
-#include "factories/images.cpp"
-#include "factories/tiles.cpp"
+#include "space/comb.cpp"
+#include "space/grid.cpp"
+#include "space/map.cpp"
 #include "stage/stage.cpp"
 #include "utils/fps.cpp"
 
@@ -31,7 +32,7 @@ namespace tamachi {
 		_hInstance = hInstance;
 
 		stage::init();
-		stage::on( "close", []( bool nothing ){
+		stage::on( "close", []( auto nothing ){
 			stop();
 		});
 	}
@@ -41,14 +42,6 @@ namespace tamachi {
 		if ( _is_started ) return;
 
 		_is_started = true;
-
-		stage::create( 320, 240 );
-
-		auto id = input::on( "keydown", []( uint32_t vk_code ){
-			if ( input::keys[ VK_MENU ] && input::keys[ VK_RETURN ] ) {
-				stage::fullscreen::toggle();
-			}
-		});
 
 		if ( _on_start ) _on_start();
 
@@ -81,7 +74,6 @@ namespace tamachi {
 		if ( _on_stop ) _on_stop();
 
 		stage::reset();
-		tiles::reset();
 	}
 
 	void on_start( std::function<void()> handler ) { _on_start = handler; }

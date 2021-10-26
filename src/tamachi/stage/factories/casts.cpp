@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../head.cpp"
-#include "../utils/listeners.cpp"
+#include "../../utils/storage.cpp"
+#include "../../utils/listeners.cpp"
 #include "tile.cpp"
 #include "cast.cpp"
 
@@ -16,10 +17,10 @@ namespace tamachi {
 
 		Config _config = {};
 
-		auto _storage = new Storage<uint64_t, Cast*>();
-		std::vector<std::unordered_map<uint64_t, Cast*>*> _layers = {};
-
 		auto _listeners = new Listeners<bool>();
+		auto _storage = new Storage<uint64_t, Cast>();
+
+		std::vector<std::unordered_map<uint64_t, Cast*>*> _layers = {};
 
 		void set( Tile* tile );
 		void unset( Tile* tile );
@@ -54,7 +55,14 @@ namespace tamachi {
 			if ( !cast ) return;
 
 			_remove( cast );
-			_storage->remove( cast->tile->id );
+
+			auto id = cast->tile->id;
+
+			cast->tile = nullptr;
+			cast->previous = {};
+			cast->current = {};
+
+			_storage->destroy( id );
 		}
 
 		void refresh() {
@@ -104,7 +112,7 @@ namespace tamachi {
 		void _create( Tile* tile ) {
 			if ( !tile ) return;
 
-			auto cast = new Cast();
+			auto cast = _storage->create();
 
 			cast->tile = tile;
 

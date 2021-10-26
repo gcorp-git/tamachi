@@ -9,7 +9,9 @@ namespace tamachi {
 	class Listeners {
 	public:
 
-		Listeners() {}
+		Listeners() {
+			//
+		}
 		
 		~Listeners() {
 			clear();

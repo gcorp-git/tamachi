@@ -15,7 +15,7 @@ namespace game {
 
 	void init() {
 		tamachi::fps::set_interval( 1.0 );
-		tamachi::fps::on_interval([]( uint64_t value ){
+		tamachi::fps::on_interval([]( auto value ){
 			tamachi::stage::rename( "FPS: " + std::to_string( value ) );
 		});
 
@@ -23,7 +23,7 @@ namespace game {
 		tamachi::on_stop( _on_stop );
 		tamachi::on_frame( _on_frame );
 
-		tamachi::stage::on( "update", []( bool nothing ){
+		tamachi::stage::on( "update", []( auto nothing ){
 			// todo: on stage update
 		});
 
@@ -34,16 +34,17 @@ namespace game {
 		// tamachi::stage::fullscreen::enable();
 		// tamachi::cursor::hide();
 
-		tamachi::stage::resize( WIDTH, HEIGHT );
+		tamachi::stage::create( WIDTH, HEIGHT );
 
 		tamachi::canvas::set_size( WIDTH, HEIGHT );
-		tamachi::canvas::set_depth( 4 );
+		tamachi::canvas::set_depth( 5 );
 		tamachi::canvas::set_bg( 0x00 );
 		
 		hero::create();
 	}
 
 	void _on_stop() {
+		tamachi::stage::destroy();
 		hero::destroy();
 	}
 

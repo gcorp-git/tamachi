@@ -14,7 +14,9 @@ namespace tamachi {
 
 		bool ok = false;
 
-		Image( std::string filename ) {
+		void load( std::string filename ) {
+			if ( memory ) VirtualFree( memory, 0, MEM_RELEASE );
+
 			std::ifstream file( ( filename + ".tamachi-image" ).c_str(), std::ios::in | std::ios::binary );
 
 			if ( !file.is_open() ) {
@@ -86,10 +88,6 @@ namespace tamachi {
 					return;
 				} break;
 			}
-		}
-
-		~Image() {
-			if ( memory ) VirtualFree( memory, 0, MEM_RELEASE );
 		}
 
 	};

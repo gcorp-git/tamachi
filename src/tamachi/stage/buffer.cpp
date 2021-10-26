@@ -188,19 +188,14 @@ namespace tamachi {
 					StretchBlt( hdc, x, y, width, height, _bg->hdc, dx, dy, dw, dh, SRCCOPY );
 				} break;
 				case stage::MODE_CENTER: {
-					double rw = static_cast<double>( width ) / static_cast<double>( _config.width );
-					double rh = static_cast<double>( height ) / static_cast<double>( _config.height );
-					double scale = rw < rh ? rw : rh;
+					auto pad = stage::get_paddings( { width, height }, { _config.width, _config.height } );
 
-					uint32_t pad_x = 0.5 * ( width - scale * _config.width );
-					uint32_t pad_y = 0.5 * ( height - scale * _config.height );
-
-					StretchDIBits( hdc, x, y, pad_x, height, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
-					StretchDIBits( hdc, x + width - pad_x, y, pad_x, height, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
-					StretchDIBits( hdc, x, y, width, pad_y, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
-					StretchDIBits( hdc, x, y + height - pad_y, width, pad_y, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+					StretchDIBits( hdc, x, y, pad.left, height, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+					StretchDIBits( hdc, x + width - pad.left, y, pad.left, height, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+					StretchDIBits( hdc, x, y, width, pad.top, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
+					StretchDIBits( hdc, x, y + height - pad.top, width, pad.top, 0, 0, 1, 1, _zeros->memory, &_bmi, DIB_RGB_COLORS, SRCCOPY );
 					
-					StretchBlt( hdc, x + pad_x, y + pad_y, width - ( pad_x + pad_x ), height - ( pad_y + pad_y ), _bg->hdc, dx, dy, dw, dh, SRCCOPY );
+					StretchBlt( hdc, x + pad.left, y + pad.top, width - ( pad.left + pad.left ), height - ( pad.top + pad.top ), _bg->hdc, dx, dy, dw, dh, SRCCOPY );
 				} break;
 				default: {
 					StretchBlt( hdc, x, y, dw, dh, _bg->hdc, dx, dy, dw, dh, SRCCOPY );

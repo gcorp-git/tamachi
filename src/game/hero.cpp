@@ -26,6 +26,8 @@ namespace game {
 		void create() {
 			if ( _is_created ) return;
 
+			_is_created = true;
+
 			auto pico = tamachi::images::get( "assets/images/pico" );
 			
 			tiles["hero"] = tamachi::tiles::create( pico );
@@ -34,22 +36,6 @@ namespace game {
 			tiles["hero"]->z = z;
 			tiles["hero"]->visible = true;
 			tamachi::canvas::render( tiles["hero"] );
-
-			_listeners["mousedown"] = tamachi::input::on( "mousedown", []( int64_t key ){
-				if ( key == VK_LBUTTON ) std::cout << "mouse::left down" << std::endl;
-			});
-
-			_listeners["mouseup"] = tamachi::input::on( "mouseup", []( int64_t key ){
-				if ( key == VK_LBUTTON ) std::cout << "mouse::left up" << std::endl;
-			});
-
-			_listeners["mousewheel"] = tamachi::input::on( "mousewheel", []( int64_t delta ){
-				if ( delta < 0 ) {
-					std::cout << "scroll down " << delta << std::endl;
-				} else {
-					std::cout << "scroll up " << delta << std::endl;
-				}
-			});
 
 			auto red = tamachi::images::get( "assets/images/red" );
 			auto green = tamachi::images::get( "assets/images/green" );
@@ -76,7 +62,46 @@ namespace game {
 			tiles["blue"]->visible = true;
 			tamachi::canvas::render( tiles["blue"] );
 
-			_is_created = true;
+
+
+			auto grid = new tamachi::grid::Grid( 8, 8 );
+			auto from = new tamachi::Point<int64_t>();
+			auto to = new tamachi::Point<int64_t>();
+			auto path = new std::vector<tamachi::Tile*>();
+
+			_listeners["mousedown"] = tamachi::input::on( "mousedown", [ grid, path, from, to, blue ]( auto key ){
+				if ( key == VK_RBUTTON ) {
+					from->x = tamachi::input::mouse::x;
+					from->y = tamachi::input::mouse::y;
+				}
+
+				if ( key == VK_LBUTTON ) {
+					to->x = tamachi::input::mouse::x;
+					to->y = tamachi::input::mouse::y;
+
+					for ( auto tile : *path ) tamachi::canvas::remove( tile );
+
+					path->clear();
+
+					grid->ray( *from, *to, 48, [ grid, path, blue ]( auto cell, auto intersection ){
+						auto tile = tamachi::tiles::create( blue );
+
+						tile->x = cell.x * grid->get_cell_width();
+						tile->y = cell.y * grid->get_cell_height();
+						tile->z = 4;
+						tile->visible = true;
+
+						tamachi::canvas::render( tile );
+
+						path->push_back( tile );
+
+						return false;
+					});
+				}
+			});
+
+
+
 		}
 
 		void destroy() {

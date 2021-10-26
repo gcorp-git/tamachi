@@ -1,9 +1,7 @@
 #pragma once
 
-#include "head.cpp"
 #include "canvas.cpp"
 #include "cursor.cpp"
-#include "input.cpp"
 #include "../utils/listeners.cpp"
 
 
@@ -54,9 +52,11 @@ namespace tamachi {
 				
 				_width = mi.rcMonitor.right - mi.rcMonitor.left;
 				_height = mi.rcMonitor.bottom - mi.rcMonitor.top;
-				
+
 				SetWindowPos( _window, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, _width, _height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED );
 			
+				input::update_window_size( _width, _height );
+
 				_is_changed = true;
 				_is_updated = true;
 			}
@@ -75,6 +75,8 @@ namespace tamachi {
 
 				SetWindowPos( _window, 0, 0, 0, _width, _height, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_FRAMECHANGED );
 			
+				input::update_window_size( _width, _height );
+
 				_is_changed = true;
 				_is_updated = true;
 			}
@@ -125,6 +127,10 @@ namespace tamachi {
 
 			canvas::attach( _hdc );
 			input::enable();
+
+			auto id = input::on( "keydown", []( auto vk_code ){
+				if ( input::keys[ VK_MENU ] && input::keys[ VK_RETURN ] ) fullscreen::toggle();
+			});
 		}
 
 		void destroy() {
@@ -173,8 +179,10 @@ namespace tamachi {
 			if ( _is_updated ) _listeners->dispatch( "update", false );
 			if ( _is_changed ) canvas::flush( _hdc, MODE_CENTER, 0, 0, _width, _height );
 
-			_is_changed = false;
+			canvas::frame();
+
 			_is_updated = false;
+			_is_changed = false;
 		}
 
 		void rename( std::string title ) {
@@ -201,7 +209,7 @@ namespace tamachi {
 		void reset() {
 			if ( !_is_inited ) return;
 
-			if ( is_created ) stage::destroy();
+			if ( is_created ) destroy();
 
 			canvas::reset();
 			cursor::reset();
@@ -217,6 +225,8 @@ namespace tamachi {
 			if ( !fullscreen::_is_enabled ) {
 				_width = _windowed_width;
 				_height = _windowed_height;
+
+				input::update_window_size( _width, _height );
 
 				_is_changed = true;
 				_is_updated = true;

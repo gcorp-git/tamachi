@@ -11,18 +11,23 @@ namespace tamachi {
 			uint32_t y = 0;
 		}
 
+		bool _is_enabled = false;
+
 		const int KEYS_SIZE = 256;
 		bool keys[ KEYS_SIZE ] = {};
 
 		auto _listeners = new Listeners<int64_t>();
 
-		bool _is_enabled = false;
+		stage::RectSize _window_size = {};
+		stage::RectSize _canvas_size = {};
 
 		void enable();
 		void disable();
 		uint64_t on( std::string event, std::function<void(int64_t)> listener );
 		void off( std::string event, uint64_t id );
 		bool process( MSG* message );
+		void update_window_size( uint32_t width, uint32_t height );
+		void update_canvas_size( uint32_t width, uint32_t height );
 		void reset();
 		void _process_kb( MSG* message );
 		void _process_mouse( MSG* message );
@@ -85,6 +90,16 @@ namespace tamachi {
 			return true;
 		}
 
+		void update_window_size( uint32_t width, uint32_t height ) {
+			_window_size.width = width;
+			_window_size.height = height;
+		}
+
+		void update_canvas_size( uint32_t width, uint32_t height ) {
+			_canvas_size.width = width;
+			_canvas_size.height = height;
+		}
+
 		void reset() {
 			if ( !_is_enabled ) return;
 
@@ -106,8 +121,14 @@ namespace tamachi {
 		}
 
 		void _process_mouse( MSG* message ) {
-			mouse::x = static_cast<uint32_t>( GET_X_LPARAM( message->lParam ) );
-			mouse::y = static_cast<uint32_t>( GET_Y_LPARAM( message->lParam ) );
+			auto scale = stage::get_scale( _window_size, _canvas_size );
+			auto pad = stage::get_paddings( _window_size, _canvas_size, scale );
+
+			auto mx = static_cast<double>( GET_X_LPARAM( message->lParam ) );
+			auto my = static_cast<double>( GET_Y_LPARAM( message->lParam ) );
+
+			mouse::x = static_cast<uint32_t>( ( mx - pad.left ) / scale );
+			mouse::y = static_cast<uint32_t>( ( my - pad.top ) / scale );
 
 			if ( message->message == WM_MOUSEMOVE ) _listeners->dispatch( "mousemove", 0 );
 

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../head.cpp"
-#include "../utils/storage.cpp"
-#include "../stage/canvas.cpp"
+#include "../../utils/storage.cpp"
 #include "tile.cpp"
 
 
@@ -11,7 +10,7 @@ namespace tamachi {
 
 		uint64_t _IDS = 0;
 
-		auto _storage = new Storage<uint64_t, Tile*>();
+		auto _storage = new Storage<uint64_t, Tile>();
 
 		Tile* create( Image* image, uint32_t dx=0, uint32_t dy=0, uint32_t dw=0, uint32_t dh=0, uint32_t width=0, uint32_t height=0 ) {
 			if ( !image || !image->ok ) return nullptr;
@@ -22,7 +21,7 @@ namespace tamachi {
 			if ( !width ) width = image->width;
 			if ( !height ) height = image->height;
 
-			auto tile = new Tile();
+			auto tile = _storage->create();
 
 			tile->id = ++_IDS;
 			tile->image = image;
@@ -39,11 +38,15 @@ namespace tamachi {
 		}
 
 		void destroy( Tile* tile ) {
+			auto id = tile->id;
+
+			tile->image = nullptr;
+			tile->x = 0;
+			tile->y = 0;
+			tile->z = 0;
 			tile->visible = false;
 
-			canvas::render( tile );
-
-			_storage->remove( tile->id );
+			_storage->destroy( id );
 		}
 
 		void reset() {
