@@ -1,10 +1,11 @@
 #pragma once
 
+#include "head.cpp"
+#include "canvas/canvas.cpp"
 #include "space/comb.cpp"
 #include "space/grid.cpp"
 #include "space/map.cpp"
-#include "stage/stage.cpp"
-#include "utils/fps.cpp"
+#include "stage/factory.cpp"
 
 
 namespace tamachi {
@@ -12,29 +13,33 @@ namespace tamachi {
 	bool _is_inited = false;
 	bool _is_started = false;
 
-	std::function<void()> _on_start = NULL;
-	std::function<void()> _on_stop = NULL;
-	std::function<void( double )> _on_frame = NULL;
+	stage::Stage* _stage = nullptr;
+	Listeners<stage::Stage*>* _listeners = nullptr;
 
 	void init( HINSTANCE hInstance, LPSTR lpCmdLine );
+	uint64_t on( std::string event, std::function<void(stage::Stage*)> listener );
+	void off( std::string event, uint64_t id );
 	void start();
 	void stop();
-	void frame( double delta );
-	void on_start( std::function<void()> handler );
-	void on_stop( std::function<void()> handler );
-	void on_frame( std::function<void( double )> handler );
+	void _loop();
 
-	void init( HINSTANCE hInstance, LPSTR lpCmdLine ) {
+	void init( HINSTANCE instance, LPSTR lpCmdLine ) {
 		if ( _is_inited ) return;
 
 		_is_inited = true;
 
-		_hInstance = hInstance;
+		stage::factory::init( instance );
 
-		stage::init();
-		stage::on( "close", []( auto nothing ){
-			stop();
-		});
+		_stage = stage::factory::create();
+		_listeners = new Listeners<stage::Stage*>();
+	}
+
+	uint64_t on( std::string event, std::function<void(stage::Stage*)> listener ) {
+		return _listeners->on( event, listener );
+	}
+
+	void off( std::string event, uint64_t id ) {
+		_listeners->off( event, id );
 	}
 
 	void start() {
@@ -43,26 +48,13 @@ namespace tamachi {
 
 		_is_started = true;
 
-		if ( _on_start ) _on_start();
+		_stage->on( "close", []( auto nothing ){
+			stop();
+		});
 
-		auto last = std::chrono::steady_clock::now();
+		_listeners->dispatch( "start", _stage );
 
-		while ( _is_started ) {
-			stage::tick();
-
-			auto now = std::chrono::steady_clock::now();
-			auto mcs = std::chrono::duration_cast<std::chrono::microseconds>( now - last );
-			double delta = static_cast<double>( mcs.count() ) / 1000000;
-
-			if ( delta > 0.015 ) {
-				if ( _on_frame ) _on_frame( delta );
-			
-				stage::frame( delta );
-				fps::frame( delta );
-				
-				last = now;
-			}
-		}
+		_loop();
 	}
 
 	void stop() {
@@ -71,13 +63,30 @@ namespace tamachi {
 
 		_is_started = false;
 
-		if ( _on_stop ) _on_stop();
+		_listeners->dispatch( "stop", _stage );
 
-		stage::reset();
+		_stage->close();
 	}
 
-	void on_start( std::function<void()> handler ) { _on_start = handler; }
-	void on_stop( std::function<void()> handler ) { _on_stop = handler; }
-	void on_frame( std::function<void( double )> handler ) { _on_frame = handler; }
+	void _loop() {
+		auto last = std::chrono::steady_clock::now();
+
+		while ( _is_started ) {
+			_stage->tick();
+
+			auto now = std::chrono::steady_clock::now();
+			auto mcs = ( std::chrono::duration_cast<std::chrono::microseconds>( now - last ) ).count();
+			
+			double delta = static_cast<double>( mcs ) / 1000000;
+
+			if ( delta > 0.015 ) {
+				_stage->frame( delta );
+
+				last = now;
+			} else {
+				if ( delta < 0.014 ) Sleep( 1 );
+			}
+		}
+	}
 
 }

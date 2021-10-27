@@ -15,8 +15,6 @@
 
 namespace tamachi {
 
-	HINSTANCE _hInstance;
-
 	template<typename T>
 	struct Point {
 		T x, y;

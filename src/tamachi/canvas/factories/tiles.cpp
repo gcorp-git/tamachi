@@ -36,6 +36,8 @@ namespace tamachi {
 		}
 
 		void destroy( Tile* tile ) {
+			if ( !tile ) return;
+
 			auto id = tile->id;
 
 			tile->image = nullptr;

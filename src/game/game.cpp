@@ -6,46 +6,46 @@
 
 namespace game {
 
+	tamachi::stage::Stage* _stage = nullptr;
+
 	void init();
-	void start();
-	void stop();
-	void _on_start();
-	void _on_stop();
+	void _on_start( tamachi::stage::Stage* stage );
+	void _on_stop( tamachi::stage::Stage* stage );
+	void _on_update( double delta );
 	void _on_frame( double delta );
 
 	void init() {
-		tamachi::fps::set_interval( 1.0 );
-		tamachi::fps::on_interval([]( auto value ){
-			tamachi::stage::rename( "FPS: " + std::to_string( value ) );
-		});
-
-		tamachi::on_start( _on_start );
-		tamachi::on_stop( _on_stop );
-		tamachi::on_frame( _on_frame );
-
-		tamachi::stage::on( "update", []( auto nothing ){
-			// todo: on stage update
-		});
+		tamachi::on( "start", _on_start );
+		tamachi::on( "stop", _on_stop );
 
 		tamachi::images::load( paths_images );
 	}
 
-	void _on_start() {
-		// tamachi::stage::fullscreen::enable();
-		// tamachi::cursor::hide();
+	void _on_start( tamachi::stage::Stage* stage ) {
+		_stage = stage;
 
-		tamachi::stage::create( WIDTH, HEIGHT );
+		tamachi::fps::set_interval( 1.0 );
+		tamachi::fps::on_interval([]( auto fps ){
+			_stage->set_title( "FPS: " + std::to_string( fps ) );
+		});
 
-		tamachi::canvas::set_size( WIDTH, HEIGHT );
-		tamachi::canvas::set_depth( 5 );
-		tamachi::canvas::set_bg( 0x00 );
-		
-		hero::create();
+		_stage->on( "update", _on_update );
+		_stage->on( "frame", _on_frame );
+
+		_stage->canvas->set_size( WIDTH, HEIGHT );
+		_stage->canvas->set_depth( 5 );
+
+		hero::create( _stage );
+
+		_stage->open( WIDTH, HEIGHT );
 	}
 
-	void _on_stop() {
-		tamachi::stage::destroy();
+	void _on_stop( tamachi::stage::Stage* stage ) {
 		hero::destroy();
+	}
+
+	void _on_update( double delta ) {
+		// todo: on either stage or canvas update
 	}
 
 	void _on_frame( double delta ) {

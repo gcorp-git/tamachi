@@ -13,18 +13,22 @@ namespace game {
 		double y = 0;
 		uint32_t z = 3;
 
-		std::unordered_map<std::string, uint64_t> _listeners = {};
+		std::unordered_map<std::string, uint64_t> _subscriptions = {};
 
 		bool _is_created = false;
 
-		void create();
+		tamachi::stage::Stage* _stage = nullptr;
+
+		void create( tamachi::stage::Stage* stage );
 		void frame( double delta );
 		void _move( double delta );
 
-		void create() {
+		void create( tamachi::stage::Stage* stage ) {
 			if ( _is_created ) return;
 
 			_is_created = true;
+
+			_stage = stage;
 
 			auto pico = tamachi::images::get( "assets/images/pico" );
 			
@@ -33,7 +37,7 @@ namespace game {
 			tiles["hero"]->y = static_cast<uint32_t>( y );
 			tiles["hero"]->z = z;
 			tiles["hero"]->visible = true;
-			tamachi::canvas::render( tiles["hero"] );
+			_stage->canvas->render( tiles["hero"] );
 
 			auto red = tamachi::images::get( "assets/images/red" );
 			auto green = tamachi::images::get( "assets/images/green" );
@@ -44,21 +48,21 @@ namespace game {
 			tiles["red"]->y = 50;
 			tiles["red"]->z = 0;
 			tiles["red"]->visible = true;
-			tamachi::canvas::render( tiles["red"] );
+			_stage->canvas->render( tiles["red"] );
 
 			tiles["green"] = tamachi::tiles::create( green );
 			tiles["green"]->x = 52;
 			tiles["green"]->y = 52;
 			tiles["green"]->z = 1;
 			tiles["green"]->visible = true;
-			tamachi::canvas::render( tiles["green"] );
+			_stage->canvas->render( tiles["green"] );
 
 			tiles["blue"] = tamachi::tiles::create( blue );
 			tiles["blue"]->x = 54;
 			tiles["blue"]->y = 54;
 			tiles["blue"]->z = 2;
 			tiles["blue"]->visible = true;
-			tamachi::canvas::render( tiles["blue"] );
+			_stage->canvas->render( tiles["blue"] );
 
 
 
@@ -67,17 +71,17 @@ namespace game {
 			auto to = new tamachi::Point<int64_t>();
 			auto path = new std::vector<tamachi::Tile*>();
 
-			_listeners["mousedown"] = tamachi::input::on( "mousedown", [ grid, path, from, to, blue ]( auto key ){
+			_subscriptions["mousedown"] = _stage->input->on( "mousedown", [ grid, path, from, to, blue ]( auto key ){
 				if ( key == VK_RBUTTON ) {
-					from->x = tamachi::input::mouse::x;
-					from->y = tamachi::input::mouse::y;
+					from->x = _stage->input->mouse->x;
+					from->y = _stage->input->mouse->y;
 				}
 
 				if ( key == VK_LBUTTON ) {
-					to->x = tamachi::input::mouse::x;
-					to->y = tamachi::input::mouse::y;
+					to->x = _stage->input->mouse->x;
+					to->y = _stage->input->mouse->y;
 
-					for ( auto tile : *path ) tamachi::canvas::remove( tile );
+					for ( auto tile : *path ) _stage->canvas->remove( tile );
 
 					path->clear();
 
@@ -89,7 +93,7 @@ namespace game {
 						tile->z = 4;
 						tile->visible = true;
 
-						tamachi::canvas::render( tile );
+						_stage->canvas->render( tile );
 
 						path->push_back( tile );
 
@@ -105,7 +109,7 @@ namespace game {
 		void destroy() {
 			if ( !_is_created ) return;
 
-			for ( auto it : _listeners ) tamachi::input::off( it.first, it.second );
+			for ( auto it : _subscriptions ) _stage->input->off( it.first, it.second );
 
 			dx = 0;
 			dy = 0;
@@ -122,10 +126,10 @@ namespace game {
 			dx = 0;
 			dy = 0;
 
-			if ( tamachi::input::keys[ VK_UP ] ) dy += -1;
-			if ( tamachi::input::keys[ VK_RIGHT ] ) dx += +1;
-			if ( tamachi::input::keys[ VK_DOWN ] ) dy += +1;
-			if ( tamachi::input::keys[ VK_LEFT ] ) dx += -1;
+			if ( _stage->input->keys[ VK_UP ] ) dy += -1;
+			if ( _stage->input->keys[ VK_RIGHT ] ) dx += +1;
+			if ( _stage->input->keys[ VK_DOWN ] ) dy += +1;
+			if ( _stage->input->keys[ VK_LEFT ] ) dx += -1;
 
 			if ( dx != 0 && dy != 0 ) { dx *= 0.7; dy *= 0.7; }
 
@@ -146,7 +150,7 @@ namespace game {
 
 			tiles["hero"]->x = static_cast<uint32_t>( x );
 			tiles["hero"]->y = static_cast<uint32_t>( y );
-			tamachi::canvas::render( tiles["hero"] );
+			_stage->canvas->render( tiles["hero"] );
 		}
 
 	}
