@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../tamachi/tamachi.cpp"
+
 
 namespace game {
 

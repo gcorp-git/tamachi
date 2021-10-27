@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../head.cpp"
-#include "../../utils/storage.cpp"
 #include "tile.cpp"
 
 

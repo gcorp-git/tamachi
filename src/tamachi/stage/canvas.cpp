@@ -1,11 +1,9 @@
 #pragma once
 
-#include "head.cpp"
-#include "buffer.cpp"
-#include "input.cpp"
 #include "factories/images.cpp"
 #include "factories/casts.cpp"
 #include "factories/tiles.cpp"
+#include "buffer.cpp"
 
 
 namespace tamachi {

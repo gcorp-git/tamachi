@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../tamachi/tamachi.cpp"
+#include "head.cpp"
 #include "hero.cpp"
 
 
