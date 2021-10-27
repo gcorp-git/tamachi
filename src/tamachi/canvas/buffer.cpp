@@ -91,27 +91,24 @@ namespace tamachi {
 
 			void draw(
 				void* memory, uint32_t memory_width, uint32_t memory_height,
-				uint32_t x=0, uint32_t y=0, uint32_t z=0, uint32_t width=0, uint32_t height=0,
+				int64_t x=0, int64_t y=0, int64_t z=0, int64_t width=0, int64_t height=0,
 				uint32_t dx=0, uint32_t dy=0, uint32_t dw=0, uint32_t dh=0
 			) {
 				if ( !_is_attached ) return;
+				if ( !memory ) return;
+				if ( z < 0 ) return;
 
 				_update();
-
-				if ( !memory ) return;
 
 				if ( !width ) width = memory_width;
 				if ( !height ) height = memory_height;
 
-				if ( !width || !height ) return;
-
-				if ( x >= _config.width || y >= _config.height || z > _config.depth ) return;
-
-				if ( x + width > _config.width ) width = _config.width - x;
-				if ( y + height > _config.height ) height = _config.height - y;
-
 				if ( !dw ) dw = width;
 				if ( !dh ) dh = height;
+
+				if ( width <= 0 || height <= 0 ) return;
+				if ( x + width <= 0 || y + height <= 0 ) return;
+				if ( x >= _config.width || y >= _config.height || z > _config.depth ) return;
 
 				auto pw = _bmi.bmiHeader.biWidth;
 				auto ph = _bmi.bmiHeader.biHeight;
@@ -131,7 +128,7 @@ namespace tamachi {
 				_bmi.bmiHeader.biHeight = ph;
 			}
 
-			void clear( uint32_t x, uint32_t y, uint32_t z, uint32_t width, uint32_t height ) {
+			void clear( int64_t x, int64_t y, int64_t z, int64_t width, int64_t height ) {
 				draw( _zeros->memory, _config.width, _config.height, x, y, z, width, height );
 			}
 

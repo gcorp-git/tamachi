@@ -34,15 +34,18 @@ namespace tamachi {
 				_listeners->off( event, id );
 			}
 		
-			void set( Tile* tile ) {
+			void set( Tile* tile, bool is_visible, int64_t x=0, int64_t y=0, int64_t z=0 ) {
 				if ( !tile ) return;
 
 				auto cast = _storage->get( tile->id );
 
-				if ( !cast ) { _create( tile ); return; }
+				if ( !cast ) {
+					cast = _create( tile );
+				} else {
+					_remove( cast );
+				}
 
-				_remove( cast );
-				_update( cast, tile );
+				_update( cast, tile, is_visible, x, y, z );
 			}
 
 			void unset( Tile* tile ) {
@@ -63,10 +66,18 @@ namespace tamachi {
 				_storage->destroy( id );
 			}
 
+			void show( Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
+				set( tile, true, x, y, z );
+			}
+
+			void hide( Tile* tile ) {
+				set( tile, false );
+			}
+
 			void refresh() {
 				_storage->each([ this ]( Cast* cast ){
-					if ( cast->tile->z >= _layers.size() ) return;
-					if ( !cast->previous.visible ) return;
+					if ( cast->current.z >= _layers.size() ) return;
+					if ( !cast->previous.is_visible ) return;
 
 					_layers[ cast->current.z ]->insert_or_assign( cast->tile->id, cast );
 				});
@@ -103,8 +114,8 @@ namespace tamachi {
 
 			std::vector<std::unordered_map<uint64_t, Cast*>*> _layers = {};
 
-			void _create( Tile* tile ) {
-				if ( !tile ) return;
+			Cast* _create( Tile* tile ) {
+				if ( !tile ) return nullptr;
 
 				auto cast = _storage->create();
 
@@ -112,7 +123,7 @@ namespace tamachi {
 
 				_storage->set( cast->tile->id, cast );
 
-				_update( cast, tile );
+				return cast;
 			}
 
 			void _remove( Cast* cast ) {
@@ -127,21 +138,21 @@ namespace tamachi {
 				layer->erase( found );
 			}
 
-			void _update( Cast* cast, Tile* tile ) {
+			void _update( Cast* cast, Tile* tile, bool is_visible, int64_t x, int64_t y, int64_t z ) {
 				if ( !cast || !tile ) return;
-				if ( tile->z >= _layers.size() ) return;
-				if ( !tile->visible && !cast->previous.visible ) return;
+				if ( z >= _layers.size() ) return;
+				if ( !is_visible && !cast->previous.is_visible ) return;
 
-				cast->current.x = tile->x;
-				cast->current.y = tile->y;
-				cast->current.z = tile->z;
+				cast->current.x = x;
+				cast->current.y = y;
+				cast->current.z = z;
 				cast->current.dx = tile->dx;
 				cast->current.dy = tile->dy;
 				cast->current.dw = tile->dw;
 				cast->current.dh = tile->dh;
 				cast->current.width = tile->width;
 				cast->current.height = tile->height;
-				cast->current.visible = tile->visible;
+				cast->current.is_visible = is_visible;
 
 				bool same_x = cast->current.x == cast->previous.x;
 				bool same_y = cast->current.y == cast->previous.y;
@@ -152,14 +163,14 @@ namespace tamachi {
 				bool same_dh = cast->current.dh == cast->previous.dh;
 				bool same_width = cast->current.width == cast->previous.width;
 				bool same_height = cast->current.height == cast->previous.height;
-				bool same_visible = cast->current.visible == cast->previous.visible;
+				bool same_is_visible = cast->current.is_visible == cast->previous.is_visible;
 				
 				bool nothing_changed = true;
 
 				nothing_changed = nothing_changed && same_x && same_y && same_z;
 				nothing_changed = nothing_changed && same_width && same_height;
 				nothing_changed = nothing_changed && same_dx && same_dy && same_dw && same_dh;
-				nothing_changed = nothing_changed && same_visible;
+				nothing_changed = nothing_changed && same_is_visible;
 
 				if ( nothing_changed ) return;
 

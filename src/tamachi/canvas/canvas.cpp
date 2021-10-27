@@ -1,8 +1,8 @@
 #pragma once
 
 #include "head.cpp"
-#include "factories/images.cpp"
-#include "factories/casts.cpp"
+#include "factories/image.factory.cpp"
+#include "factories/cast.factory.cpp"
 #include "factories/tiles.cpp"
 #include "buffer.cpp"
 
@@ -39,6 +39,7 @@ namespace tamachi {
 			
 			uint32_t width() { return _width; }
 			uint32_t height() { return _height; }
+			uint32_t depth() { return _depth; }
 
 			void attach( HDC hdc ) {
 				_buffer->attach( hdc );
@@ -48,25 +49,31 @@ namespace tamachi {
 				_buffer->detach();
 			}
 
-			void render( Tile* tile ) {
+			void show( Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
 				if ( !tile ) return;
 
-				_casts->set( tile );
+				_casts->show( tile, x, y, z );
 			
+				_is_changed = true;
+			}
+
+			void hide( Tile* tile ) {
+				if ( !tile ) return;
+
+				_casts->hide( tile );
+
 				_is_changed = true;
 			}
 
 			void remove( Tile* tile ) {
 				if ( !tile ) return;
 
-				tile->visible = false;
-
-				render( tile );
+				hide( tile );
 
 				_removed_tiles.push_back( tile );
 			}
 
-			void frame() {
+			void frame( double delta ) {
 				for ( auto tile : _removed_tiles ) {
 					_casts->unset( tile );
 
@@ -94,6 +101,8 @@ namespace tamachi {
 			}
 
 			void set_depth( uint32_t depth ) {
+				_depth = depth;
+
 				_buffer->set_depth( depth );
 				_casts->set_depth( depth );
 			
@@ -121,7 +130,8 @@ namespace tamachi {
 				_casts->each([ this ]( auto layer ){
 					void* memory;
 					uint32_t mw, mh;
-					uint32_t x, y, z, width, height;
+					int64_t x, y, z;
+					int64_t width, height;
 					uint32_t dx, dy, dw, dh;
 
 					// todo: @opt - two loops is too much
@@ -131,7 +141,7 @@ namespace tamachi {
 					for ( auto it : *layer ) {
 						auto cast = it.second;
 
-						if ( cast->previous.visible ) {
+						if ( cast->previous.is_visible ) {
 							x = cast->previous.x;
 							y = cast->previous.y;
 							z = cast->previous.z;
@@ -146,7 +156,7 @@ namespace tamachi {
 					for ( auto it : *layer ) {
 						auto cast = it.second;
 
-						if ( cast->current.visible ) {
+						if ( cast->current.is_visible ) {
 							memory = cast->tile->image->memory;
 							
 							mw = cast->tile->image->width;
@@ -176,7 +186,7 @@ namespace tamachi {
 						cast->previous.dy = cast->current.dy;
 						cast->previous.dw = cast->current.dw;
 						cast->previous.dh = cast->current.dh;
-						cast->previous.visible = cast->current.visible;
+						cast->previous.is_visible = cast->current.is_visible;
 					}
 				});
 
@@ -195,6 +205,7 @@ namespace tamachi {
 
 			uint32_t _width = 0;
 			uint32_t _height = 0;
+			uint32_t _depth = 0;
 
 			Buffer* _buffer = nullptr;
 			CastFactory* _casts = nullptr;

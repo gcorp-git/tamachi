@@ -18,11 +18,15 @@ namespace game {
 		tamachi::on( "start", _on_start );
 		tamachi::on( "stop", _on_stop );
 
-		tamachi::images::load( paths_images );
+		tamachi::image::factory::load( paths_images );
+
+		tamachi::scene::factory::create( "default" );
 	}
 
 	void _on_start( tamachi::stage::Stage* stage ) {
 		_stage = stage;
+		
+		_stage->camera->set_scene( tamachi::scene::factory::get( "default" ) );
 
 		tamachi::fps::set_interval( 1.0 );
 		tamachi::fps::on_interval([]( auto fps ){

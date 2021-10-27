@@ -10,7 +10,7 @@ namespace tamachi {
 
 		auto _storage = new Storage<uint64_t, Tile>();
 
-		Tile* create( Image* image, uint32_t dx=0, uint32_t dy=0, uint32_t dw=0, uint32_t dh=0, uint32_t width=0, uint32_t height=0 ) {
+		Tile* create( image::Image* image, uint32_t dx=0, uint32_t dy=0, uint32_t dw=0, uint32_t dh=0, uint32_t width=0, uint32_t height=0 ) {
 			if ( !image || !image->ok ) return nullptr;
 
 			if ( !dw ) dw = image->width;
@@ -41,10 +41,6 @@ namespace tamachi {
 			auto id = tile->id;
 
 			tile->image = nullptr;
-			tile->x = 0;
-			tile->y = 0;
-			tile->z = 0;
-			tile->visible = false;
 
 			_storage->destroy( id );
 		}

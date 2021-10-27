@@ -83,6 +83,10 @@ namespace tamachi {
 			_map.clear();
 		}
 
+		std::unordered_map<T, U*>* all() {
+			return &_map;
+		}
+
 	protected:
 		uint64_t _free_limit = 0;
 		std::unordered_map<T, U*> _map = {};

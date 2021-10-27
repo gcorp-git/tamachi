@@ -1,7 +1,6 @@
 #pragma once
 
 #include "head.cpp"
-#include "input.cpp"
 
 
 namespace tamachi {
@@ -10,6 +9,7 @@ namespace tamachi {
 		class Stage {
 		public:
 			canvas::Canvas* canvas = nullptr;
+			Camera* camera = nullptr;
 			Input* input = nullptr;
 			
 			Stage( uint64_t id, std::function<void(uint64_t, HWND)> on_open, std::function<void(uint64_t, HWND)> on_close ) {
@@ -18,6 +18,7 @@ namespace tamachi {
 				_on_close = on_close;
 
 				canvas = new canvas::Canvas();
+				camera = new Camera( canvas );
 				input = new Input();
 
 				canvas->on( "update", [ this ]( auto nothing ){
@@ -35,6 +36,7 @@ namespace tamachi {
 			
 			~Stage() {
 				delete canvas;
+				delete camera;
 				delete input;
 
 				delete _listeners;
@@ -158,11 +160,13 @@ namespace tamachi {
 
 				_listeners->dispatch( "frame", delta );
 
+				camera->frame( delta );
+
 				if ( canvas->is_changed() ) {
 					canvas->flush( _hdc, canvas::MODE_CENTER, 0, 0, _width, _height );
 				}
 				
-				canvas->frame();
+				canvas->frame( delta );
 
 				fps::frame( delta );
 				

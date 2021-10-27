@@ -11,7 +11,7 @@ namespace game {
 
 		double x = 0;
 		double y = 0;
-		uint32_t z = 3;
+		int64_t z = 3;
 
 		std::unordered_map<std::string, uint64_t> _subscriptions = {};
 
@@ -30,39 +30,25 @@ namespace game {
 
 			_stage = stage;
 
-			auto pico = tamachi::images::get( "assets/images/pico" );
+			auto scene = tamachi::scene::factory::get( "default" );
+
+			auto pico = tamachi::image::factory::get( "assets/images/pico" );
 			
 			tiles["hero"] = tamachi::tiles::create( pico );
-			tiles["hero"]->x = static_cast<uint32_t>( x );
-			tiles["hero"]->y = static_cast<uint32_t>( y );
-			tiles["hero"]->z = z;
-			tiles["hero"]->visible = true;
-			_stage->canvas->render( tiles["hero"] );
+			scene->set( tiles["hero"], static_cast<int64_t>( x ), static_cast<int64_t>( y ), z );
 
-			auto red = tamachi::images::get( "assets/images/red" );
-			auto green = tamachi::images::get( "assets/images/green" );
-			auto blue = tamachi::images::get( "assets/images/blue" );
+			auto red = tamachi::image::factory::get( "assets/images/red" );
+			auto green = tamachi::image::factory::get( "assets/images/green" );
+			auto blue = tamachi::image::factory::get( "assets/images/blue" );
 
 			tiles["red"] = tamachi::tiles::create( red );
-			tiles["red"]->x = 50;
-			tiles["red"]->y = 50;
-			tiles["red"]->z = 0;
-			tiles["red"]->visible = true;
-			_stage->canvas->render( tiles["red"] );
+			scene->set( tiles["red"], 50, 50, 0 );
 
 			tiles["green"] = tamachi::tiles::create( green );
-			tiles["green"]->x = 52;
-			tiles["green"]->y = 52;
-			tiles["green"]->z = 1;
-			tiles["green"]->visible = true;
-			_stage->canvas->render( tiles["green"] );
+			scene->set( tiles["green"], 52, 52, 1 );
 
 			tiles["blue"] = tamachi::tiles::create( blue );
-			tiles["blue"]->x = 54;
-			tiles["blue"]->y = 54;
-			tiles["blue"]->z = 2;
-			tiles["blue"]->visible = true;
-			_stage->canvas->render( tiles["blue"] );
+			scene->set( tiles["blue"], 54, 54, 2 );
 
 
 
@@ -71,7 +57,7 @@ namespace game {
 			auto to = new tamachi::Point<int64_t>();
 			auto path = new std::vector<tamachi::Tile*>();
 
-			_subscriptions["mousedown"] = _stage->input->on( "mousedown", [ grid, path, from, to, blue ]( auto key ){
+			_subscriptions["mousedown"] = _stage->input->on( "mousedown", [ scene, grid, path, from, to, blue ]( auto key ){
 				if ( key == VK_RBUTTON ) {
 					from->x = _stage->input->mouse->x;
 					from->y = _stage->input->mouse->y;
@@ -85,15 +71,14 @@ namespace game {
 
 					path->clear();
 
-					grid->ray( *from, *to, 48, [ grid, path, blue ]( auto cell, auto intersection ){
+					grid->ray( *from, *to, 48, [ scene, grid, path, blue ]( auto cell, auto intersection ){
 						auto tile = tamachi::tiles::create( blue );
 
-						tile->x = cell.x * grid->get_cell_width();
-						tile->y = cell.y * grid->get_cell_height();
-						tile->z = 4;
-						tile->visible = true;
+						int64_t x = cell.x * grid->get_cell_width();
+						int64_t y = cell.y * grid->get_cell_height();
+						int64_t z = 4;
 
-						_stage->canvas->render( tile );
+						scene->set( tile, x, y, z );
 
 						path->push_back( tile );
 
@@ -142,15 +127,8 @@ namespace game {
 			x += dx * speed * delta;
 			y += dy * speed * delta;
 
-			if ( x < 0 ) x = 0;
-			if ( x > WIDTH - 8 ) x = WIDTH - 8;
-
-			if ( y < 0 ) y = 0;
-			if ( y > HEIGHT - 8 ) y = HEIGHT - 8;
-
-			tiles["hero"]->x = static_cast<uint32_t>( x );
-			tiles["hero"]->y = static_cast<uint32_t>( y );
-			_stage->canvas->render( tiles["hero"] );
+			_stage->camera->x = static_cast<int64_t>( x );
+			_stage->camera->y = static_cast<int64_t>( y );
 		}
 
 	}
