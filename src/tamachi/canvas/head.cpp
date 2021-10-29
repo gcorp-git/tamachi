@@ -20,10 +20,6 @@ namespace tamachi {
 			uint8_t bg;
 		};
 
-		struct CastFactoryConfig {
-			uint32_t depth;
-		};
-
 		struct Layer {
 			HDC hdc;
 			HBITMAP bitmap;

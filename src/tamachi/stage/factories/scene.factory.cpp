@@ -23,7 +23,7 @@ namespace tamachi {
 				return _storage->get( name );
 			}
 
-			void reset() {
+			void clear() {
 				_storage->clear();
 			}
 

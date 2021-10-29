@@ -73,10 +73,6 @@ namespace tamachi {
 			_map.erase( found );
 		}
 
-		void each( std::function<void(U*)> handler ) {
-			for ( auto it : _map ) handler( it.second );
-		}
-		
 		void clear() {
 			for ( auto it : _map ) destroy( it.first );
 

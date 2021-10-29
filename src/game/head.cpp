@@ -17,6 +17,6 @@ namespace game {
 		"assets/images/blue",
 	};
 
-	std::unordered_map<std::string, tamachi::Tile*> tiles;
+	std::unordered_map<std::string, tamachi::tile::Tile*> tiles;
 
 }

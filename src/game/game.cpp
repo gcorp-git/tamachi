@@ -18,7 +18,9 @@ namespace game {
 		tamachi::on( "start", _on_start );
 		tamachi::on( "stop", _on_stop );
 
-		tamachi::image::factory::load( paths_images );
+		// for ( auto path : paths_images ) {
+		// 	tamachi::image::factory::get( path );
+		// }
 
 		tamachi::scene::factory::create( "default" );
 	}

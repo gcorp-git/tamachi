@@ -2,8 +2,8 @@
 
 #include "head.cpp"
 #include "factories/image.factory.cpp"
+#include "factories/tile.factory.cpp"
 #include "factories/cast.factory.cpp"
-#include "factories/tiles.cpp"
 #include "buffer.cpp"
 
 
@@ -16,11 +16,11 @@ namespace tamachi {
 			Canvas() {
 				_listeners = new Listeners<bool>();
 				_buffer = new Buffer();
-				_casts = new CastFactory();
+				_casts = new cast::CastFactory();
 			}
 
 			~Canvas() {
-				tiles::reset();
+				tile::factory::clear();
 			
 				delete _listeners;
 				delete _buffer;
@@ -49,7 +49,7 @@ namespace tamachi {
 				_buffer->detach();
 			}
 
-			void show( Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
+			void show( tile::Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
 				if ( !tile ) return;
 
 				_casts->show( tile, x, y, z );
@@ -57,7 +57,7 @@ namespace tamachi {
 				_is_changed = true;
 			}
 
-			void hide( Tile* tile ) {
+			void hide( tile::Tile* tile ) {
 				if ( !tile ) return;
 
 				_casts->hide( tile );
@@ -65,7 +65,7 @@ namespace tamachi {
 				_is_changed = true;
 			}
 
-			void remove( Tile* tile ) {
+			void remove( tile::Tile* tile ) {
 				if ( !tile ) return;
 
 				hide( tile );
@@ -77,7 +77,7 @@ namespace tamachi {
 				for ( auto tile : _removed_tiles ) {
 					_casts->unset( tile );
 
-					tiles::destroy( tile );
+					tile::factory::destroy( tile );
 				}
 
 				_removed_tiles.clear();
@@ -128,66 +128,7 @@ namespace tamachi {
 				if ( _is_updated ) _casts->refresh();
 
 				_casts->each([ this ]( auto layer ){
-					void* memory;
-					uint32_t mw, mh;
-					int64_t x, y, z;
-					int64_t width, height;
-					uint32_t dx, dy, dw, dh;
-
-					// todo: @opt - two loops is too much
-					// as an option, "draw" and "clear" casts can be stored in different maps;
-					// then it would be two different loops without repeating.
-
-					for ( auto it : *layer ) {
-						auto cast = it.second;
-
-						if ( cast->previous.is_visible ) {
-							x = cast->previous.x;
-							y = cast->previous.y;
-							z = cast->previous.z;
-
-							width = cast->previous.width;
-							height = cast->previous.height;
-
-							_buffer->clear( x, y, z, width, height );
-						}
-					}
-
-					for ( auto it : *layer ) {
-						auto cast = it.second;
-
-						if ( cast->current.is_visible ) {
-							memory = cast->tile->image->memory;
-							
-							mw = cast->tile->image->width;
-							mh = cast->tile->image->height;
-
-							x = cast->current.x;
-							y = cast->current.y;
-							z = cast->current.z;
-
-							width = cast->current.width;
-							height = cast->current.height;
-
-							dx = cast->current.dx;
-							dy = cast->current.dy;
-							dw = cast->current.dw;
-							dh = cast->current.dh;
-
-							_buffer->draw( memory, mw, mh, x, y, z, width, height, dx, dy, dw, dh );
-						}
-
-						cast->previous.x = cast->current.x;
-						cast->previous.y = cast->current.y;
-						cast->previous.z = cast->current.z;
-						cast->previous.width = cast->current.width;
-						cast->previous.height = cast->current.height;
-						cast->previous.dx = cast->current.dx;
-						cast->previous.dy = cast->current.dy;
-						cast->previous.dw = cast->current.dw;
-						cast->previous.dh = cast->current.dh;
-						cast->previous.is_visible = cast->current.is_visible;
-					}
+					_render_layer_casts( layer );
 				});
 
 				_casts->clear();
@@ -208,12 +149,72 @@ namespace tamachi {
 			uint32_t _depth = 0;
 
 			Buffer* _buffer = nullptr;
-			CastFactory* _casts = nullptr;
+			cast::CastFactory* _casts = nullptr;
 
-			std::vector<Tile*> _removed_tiles = {};
+			std::vector<tile::Tile*> _removed_tiles = {};
 		
 			Listeners<bool>* _listeners = nullptr;
 			
+			void _render_layer_casts( std::unordered_map<uint64_t, cast::Cast*>* casts ) {
+				cast::Cast* cast;
+				void* memory;
+				uint32_t mw, mh;
+				int64_t x, y, z;
+				int64_t width, height;
+				uint32_t dx, dy, dw, dh;
+
+				for ( auto it : *casts ) {
+					cast = it.second;
+
+					if ( cast->previous.is_visible ) {
+						x = cast->previous.x;
+						y = cast->previous.y;
+						z = cast->previous.z;
+
+						width = cast->previous.width;
+						height = cast->previous.height;
+
+						_buffer->clear( x, y, z, width, height );
+					}
+				}
+
+				for ( auto it : *casts ) {
+					cast = it.second;
+
+					if ( cast->current.is_visible ) {
+						memory = cast->tile.image->memory;
+						
+						mw = cast->tile.image->width;
+						mh = cast->tile.image->height;
+
+						x = cast->current.x;
+						y = cast->current.y;
+						z = cast->current.z;
+
+						width = cast->current.width;
+						height = cast->current.height;
+
+						dx = cast->current.dx;
+						dy = cast->current.dy;
+						dw = cast->current.dw;
+						dh = cast->current.dh;
+
+						_buffer->draw( memory, mw, mh, x, y, z, width, height, dx, dy, dw, dh );
+					}
+
+					cast->previous.x = cast->current.x;
+					cast->previous.y = cast->current.y;
+					cast->previous.z = cast->current.z;
+					cast->previous.width = cast->current.width;
+					cast->previous.height = cast->current.height;
+					cast->previous.dx = cast->current.dx;
+					cast->previous.dy = cast->current.dy;
+					cast->previous.dw = cast->current.dw;
+					cast->previous.dh = cast->current.dh;
+					cast->previous.is_visible = cast->current.is_visible;
+				}
+			}
+
 		};
 
 	}

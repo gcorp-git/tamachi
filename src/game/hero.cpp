@@ -34,20 +34,20 @@ namespace game {
 
 			auto pico = tamachi::image::factory::get( "assets/images/pico" );
 			
-			tiles["hero"] = tamachi::tiles::create( pico );
+			tiles["hero"] = tamachi::tile::factory::create( pico );
 			scene->set( tiles["hero"], static_cast<int64_t>( x ), static_cast<int64_t>( y ), z );
 
 			auto red = tamachi::image::factory::get( "assets/images/red" );
 			auto green = tamachi::image::factory::get( "assets/images/green" );
 			auto blue = tamachi::image::factory::get( "assets/images/blue" );
 
-			tiles["red"] = tamachi::tiles::create( red );
+			tiles["red"] = tamachi::tile::factory::create( red );
 			scene->set( tiles["red"], 50, 50, 0 );
 
-			tiles["green"] = tamachi::tiles::create( green );
+			tiles["green"] = tamachi::tile::factory::create( green );
 			scene->set( tiles["green"], 52, 52, 1 );
 
-			tiles["blue"] = tamachi::tiles::create( blue );
+			tiles["blue"] = tamachi::tile::factory::create( blue );
 			scene->set( tiles["blue"], 54, 54, 2 );
 
 
@@ -55,24 +55,24 @@ namespace game {
 			auto grid = new tamachi::grid::Grid( 8, 8 );
 			auto from = new tamachi::Point<int64_t>();
 			auto to = new tamachi::Point<int64_t>();
-			auto path = new std::vector<tamachi::Tile*>();
+			auto line_tiles = new std::vector<tamachi::tile::Tile*>();
 
-			_subscriptions["mousedown"] = _stage->input->on( "mousedown", [ scene, grid, path, from, to, blue ]( auto key ){
+			_subscriptions["mousedown"] = _stage->input->on( "mousedown", [ scene, grid, line_tiles, from, to, blue ]( auto key ){
 				if ( key == VK_RBUTTON ) {
-					from->x = _stage->input->mouse->x;
-					from->y = _stage->input->mouse->y;
+					from->x = _stage->input->mouse->x + _stage->camera->x;
+					from->y = _stage->input->mouse->y + _stage->camera->y;
 				}
 
 				if ( key == VK_LBUTTON ) {
-					to->x = _stage->input->mouse->x;
-					to->y = _stage->input->mouse->y;
+					to->x = _stage->input->mouse->x + _stage->camera->x;
+					to->y = _stage->input->mouse->y + _stage->camera->y;
 
-					for ( auto tile : *path ) _stage->canvas->remove( tile );
+					for ( auto tile : *line_tiles ) scene->unset( tile );
 
-					path->clear();
+					line_tiles->clear();
 
-					grid->ray( *from, *to, 48, [ scene, grid, path, blue ]( auto cell, auto intersection ){
-						auto tile = tamachi::tiles::create( blue );
+					grid->ray( *from, *to, 48, [ scene, grid, line_tiles, blue ]( auto cell, auto intersection ){
+						auto tile = tamachi::tile::factory::create( blue );
 
 						int64_t x = cell.x * grid->get_cell_width();
 						int64_t y = cell.y * grid->get_cell_height();
@@ -80,7 +80,7 @@ namespace game {
 
 						scene->set( tile, x, y, z );
 
-						path->push_back( tile );
+						line_tiles->push_back( tile );
 
 						return false;
 					});

@@ -1,12 +1,36 @@
 #pragma once
 
-#include "tile.cpp"
-#include "cast.cpp"
-
 
 namespace tamachi {
-	namespace canvas {
+	namespace cast {
 		
+		struct CastFactoryConfig {
+			uint32_t depth;
+		};
+
+		struct CastState {
+			int64_t x;
+			int64_t y;
+			int64_t z;
+
+			int64_t width;
+			int64_t height;
+
+			uint32_t dx;
+			uint32_t dy;
+			uint32_t dw;
+			uint32_t dh;
+
+			bool is_visible;
+		};
+
+		struct Cast {
+			tile::Tile tile;
+
+			CastState previous;
+			CastState current;
+		};
+
 		class CastFactory {
 		public:
 
@@ -34,7 +58,7 @@ namespace tamachi {
 				_listeners->off( event, id );
 			}
 		
-			void set( Tile* tile, bool is_visible, int64_t x=0, int64_t y=0, int64_t z=0 ) {
+			void set( tile::Tile* tile, bool is_visible, int64_t x=0, int64_t y=0, int64_t z=0 ) {
 				if ( !tile ) return;
 
 				auto cast = _storage->get( tile->id );
@@ -48,7 +72,7 @@ namespace tamachi {
 				_update( cast, tile, is_visible, x, y, z );
 			}
 
-			void unset( Tile* tile ) {
+			void unset( tile::Tile* tile ) {
 				if ( !tile ) return;
 
 				auto cast = _storage->get( tile->id );
@@ -57,30 +81,28 @@ namespace tamachi {
 
 				_remove( cast );
 
-				auto id = cast->tile->id;
-
-				cast->tile = nullptr;
-				cast->previous = {};
-				cast->current = {};
-
-				_storage->destroy( id );
+				_storage->destroy( cast->tile.id );
 			}
 
-			void show( Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
+			void show( tile::Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
 				set( tile, true, x, y, z );
 			}
 
-			void hide( Tile* tile ) {
+			void hide( tile::Tile* tile ) {
 				set( tile, false );
 			}
 
 			void refresh() {
-				_storage->each([ this ]( Cast* cast ){
+				auto casts = _storage->all();
+
+				for ( auto it : *casts ) {
+					auto cast = it.second;
+
 					if ( cast->current.z >= _layers.size() ) return;
 					if ( !cast->previous.is_visible ) return;
 
-					_layers[ cast->current.z ]->insert_or_assign( cast->tile->id, cast );
-				});
+					_layers[ cast->current.z ]->insert_or_assign( cast->tile.id, cast );
+				}
 			}
 
 			void clear() {
@@ -89,6 +111,10 @@ namespace tamachi {
 
 			void each( std::function<void(std::unordered_map<uint64_t, Cast*>*)> handler ) {
 				for ( auto layer : _layers ) handler( layer );
+			}
+
+			std::vector<std::unordered_map<uint64_t, Cast*>*>* all() {
+				return &_layers;
 			}
 
 			void set_depth( uint32_t depth ) {
@@ -114,14 +140,14 @@ namespace tamachi {
 
 			std::vector<std::unordered_map<uint64_t, Cast*>*> _layers = {};
 
-			Cast* _create( Tile* tile ) {
+			Cast* _create( tile::Tile* tile ) {
 				if ( !tile ) return nullptr;
 
 				auto cast = _storage->create();
 
-				cast->tile = tile;
+				cast->tile = *tile;
 
-				_storage->set( cast->tile->id, cast );
+				_storage->set( cast->tile.id, cast );
 
 				return cast;
 			}
@@ -131,14 +157,14 @@ namespace tamachi {
 
 				auto layer = _layers[ cast->current.z ];
 
-				auto found = layer->find( cast->tile->id );
+				auto found = layer->find( cast->tile.id );
 
 				if ( found == layer->end() ) return;
 
 				layer->erase( found );
 			}
 
-			void _update( Cast* cast, Tile* tile, bool is_visible, int64_t x, int64_t y, int64_t z ) {
+			void _update( Cast* cast, tile::Tile* tile, bool is_visible, int64_t x, int64_t y, int64_t z ) {
 				if ( !cast || !tile ) return;
 				if ( z >= _layers.size() ) return;
 				if ( !is_visible && !cast->previous.is_visible ) return;
@@ -174,7 +200,7 @@ namespace tamachi {
 
 				if ( nothing_changed ) return;
 
-				_layers[ cast->current.z ]->insert_or_assign( cast->tile->id, cast );
+				_layers[ cast->current.z ]->insert_or_assign( cast->tile.id, cast );
 			}
 
 		};
