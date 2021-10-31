@@ -50,14 +50,14 @@ namespace tamachi {
 				delete _storage;
 			}
 			
-			uint64_t on( std::string event, std::function<void(bool)> listener ) {
-				return _listeners->on( event, listener );
+			Listener on( std::string event, std::function<void(bool)> handler ) {
+				return _listeners->on( event, handler );
 			}
 
-			void off( std::string event, uint64_t id ) {
-				_listeners->off( event, id );
+			void off( Listener listener ) {
+				_listeners->off( listener );
 			}
-		
+
 			void set( tile::Tile* tile, bool is_visible, int64_t x=0, int64_t y=0, int64_t z=0 ) {
 				if ( !tile ) return;
 

@@ -15,11 +15,10 @@
 
 namespace tamachi {
 
-	template<typename T>
 	struct Point {
-		T x, y;
+		double x, y;
 
-		Point( T _x=0, T _y=0 ) {
+		Point( double _x=0, double _y=0 ) {
 			x = _x;
 			y = _y;
 		}

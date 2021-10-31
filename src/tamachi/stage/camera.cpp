@@ -6,9 +6,9 @@ namespace tamachi {
 
 		class Camera {
 		public:
-			int64_t x = 0;
-			int64_t y = 0;
-			int64_t z = 0;
+			double x = 0;
+			double y = 0;
+			double z = 0;
 
 			Camera( canvas::Canvas* new_canvas ) {
 				_canvas = new_canvas;
@@ -31,7 +31,7 @@ namespace tamachi {
 				_scene = new_scene;
 			}
 
-			void set_depth( uint64_t depth ) {
+			void set_depth( double depth ) {
 				_depth = depth;
 			}
 
@@ -45,17 +45,17 @@ namespace tamachi {
 
 				auto _next = new std::unordered_map<uint64_t, scene::Sprite>();
 
-				std::vector<scene::Sprite*> result;
+				std::vector<scene::Sprite> result;
 
 				_scene->box( x, y, z, width, height, _depth, &result );
 
 				for ( auto _sprite : result ) {
 					scene::Sprite sprite = {};
 
-					sprite.tile = _sprite->tile;
-					sprite.x = _sprite->x - x;
-					sprite.y = _sprite->y - y;
-					sprite.z = _sprite->z - z;
+					sprite.tile = _sprite.tile;
+					sprite.x = _sprite.x - x;
+					sprite.y = _sprite.y - y;
+					sprite.z = _sprite.z - z;
 
 					auto found = _previous->find( sprite.tile.id );
 
@@ -81,7 +81,7 @@ namespace tamachi {
 			canvas::Canvas* _canvas = nullptr;
 			scene::Scene* _scene = nullptr;
 
-			uint64_t _depth = 0;
+			double _depth = 0;
 
 			std::unordered_map<uint64_t, scene::Sprite>* _previous = nullptr;
 
@@ -97,7 +97,11 @@ namespace tamachi {
 				for ( auto it : *_previous ) {
 					auto sprite = it.second;
 
-					_canvas->show( &sprite.tile, sprite.x, sprite.y, sprite.z );
+					auto ix = static_cast<int64_t>( sprite.x );
+					auto iy = static_cast<int64_t>( sprite.y );
+					auto iz = static_cast<int64_t>( sprite.z );
+
+					_canvas->show( &sprite.tile, ix, iy, iz );
 				}
 			}
 

@@ -27,12 +27,12 @@ namespace tamachi {
 				delete _casts;
 			}
 
-			uint64_t on( std::string event, std::function<void(bool)> listener ) {
-				return _listeners->on( event, listener );
+			Listener on( std::string event, std::function<void(bool)> handler ) {
+				return _listeners->on( event, handler );
 			}
 
-			void off( std::string event, uint64_t id ) {
-				_listeners->off( event, id );
+			void off( Listener listener ) {
+				_listeners->off( listener );
 			}
 
 			bool is_changed() { return _is_changed; }
@@ -202,16 +202,7 @@ namespace tamachi {
 						_buffer->draw( memory, mw, mh, x, y, z, width, height, dx, dy, dw, dh );
 					}
 
-					cast->previous.x = cast->current.x;
-					cast->previous.y = cast->current.y;
-					cast->previous.z = cast->current.z;
-					cast->previous.width = cast->current.width;
-					cast->previous.height = cast->current.height;
-					cast->previous.dx = cast->current.dx;
-					cast->previous.dy = cast->current.dy;
-					cast->previous.dw = cast->current.dw;
-					cast->previous.dh = cast->current.dh;
-					cast->previous.is_visible = cast->current.is_visible;
+					cast->previous = cast->current;
 				}
 			}
 

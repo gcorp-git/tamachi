@@ -62,12 +62,12 @@ namespace tamachi {
 				_hdc = NULL;
 			}
 
-			uint64_t on( std::string event, std::function<void(bool)> listener ) {
-				return _listeners->on( event, listener );
+			Listener on( std::string event, std::function<void(bool)> handler ) {
+				return _listeners->on( event, handler );
 			}
 
-			void off( std::string event, uint64_t id ) {
-				_listeners->off( event, id );
+			void off( Listener listener ) {
+				_listeners->off( listener );
 			}
 
 			void set_size( uint32_t width, uint32_t height ) {

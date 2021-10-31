@@ -12,8 +12,8 @@ namespace tamachi {
 		};
 
 		struct Cell {
-			uint32_t width, height;
 			int64_t x, y;
+			uint32_t width, height;
 		};
 
 		class Grid {
@@ -33,80 +33,70 @@ namespace tamachi {
 				_left = left;
 			}
 
-			bool find( Point<int64_t> p, Cell* cell=nullptr ) {
+			bool find( Point p, Cell* cell=nullptr ) {
 				if ( !_is_point_in_borders( p ) ) return false;
 
 				if ( cell ) {
+					cell->x = static_cast<int64_t>( p.x / static_cast<double>( _cw ) );
+					cell->y = static_cast<int64_t>( p.y / static_cast<double>( _ch ) );
+
 					cell->width = _cw;
 					cell->height = _ch;
-
-					cell->x = static_cast<int64_t>( static_cast<double>( p.x ) / static_cast<double>( _cw ) );
-					cell->y = static_cast<int64_t>( static_cast<double>( p.y ) / static_cast<double>( _ch ) );
 				}
 
 				return true;
 			}
 
-			void ray( Point<int64_t> from, Point<int64_t> to, uint64_t limit, std::function<bool(Cell, Point<int64_t>)> handler ) {
+			void ray( Point from, Point to, double limit, std::function<bool(Cell, Point)> handler ) {
 				double dcw = static_cast<double>( _cw );
 				double dch = static_cast<double>( _ch );
 
-				Point<double> _from = {
-					static_cast<double>( from.x ) / dcw,
-					static_cast<double>( from.y ) / dch
-				};
-				
-				Point<double> _to = {
-					static_cast<double>( to.x ) / dcw,
-					static_cast<double>( to.y ) / dch
-				};
+				Point _from = { from.x / dcw, from.y / dch };
+				Point _to = { to.x / dcw, to.y / dch };
 
 				double dx = _to.x - _from.x;
 				double dy = _to.y - _from.y;
 				double mag = std::sqrt( dx * dx + dy * dy );
 
-				Point<double> dir = { dx / mag, dy / mag };
+				Point dir = { dx / mag, dy / mag };
 
-				Point<double> step_size = {
+				Point step_size = {
 					std::sqrt( 1 + ( dir.y / dir.x ) * ( dir.y / dir.x ) ),
 					std::sqrt( 1 + ( dir.x / dir.y ) * ( dir.x / dir.y ) )
 				};
 
-				Point<double> ray_length;
-				Point<int64_t> step;
+				Point ray_length;
+				Point step;
 
-				Point<int64_t> cell_pos = {
-					static_cast<int64_t>( _from.x ),
-					static_cast<int64_t>( _from.y )
-				};
+				Point cell_pos = { _from.x, _from.y };
 				
 				if ( dir.x < 0 ) {
 					step.x = -1;
-					ray_length.x = step_size.x * ( _from.x - static_cast<double>( cell_pos.x ) );
+					ray_length.x = step_size.x * ( _from.x - cell_pos.x );
 				} else {
 					step.x = 1;
-					ray_length.x = step_size.x * ( static_cast<double>( cell_pos.x + 1 ) - _from.x );
+					ray_length.x = step_size.x * ( ( cell_pos.x + 1 ) - _from.x );
 				}
 
 				if ( dir.y < 0 ) {
 					step.y = -1;
-					ray_length.y = step_size.y * ( _from.y - static_cast<double>( cell_pos.y ) );
+					ray_length.y = step_size.y * ( _from.y - cell_pos.y );
 				} else {
 					step.y = 1;
-					ray_length.y = step_size.y * ( static_cast<double>( cell_pos.y + 1 ) - _from.y );
+					ray_length.y = step_size.y * ( ( cell_pos.y + 1 ) - _from.y );
 				}
 
 				double distance = 0;
 				
-				Point<int64_t> intersection;
+				Point intersection;
 
 				Cell cell;
 				cell.width = _cw;
 				cell.height = _ch;
 
 				while ( true ) {
-					cell.x = cell_pos.x;
-					cell.y = cell_pos.y;
+					cell.x = static_cast<int64_t>( cell_pos.x );
+					cell.y = static_cast<int64_t>( cell_pos.y );
 
 					if ( !_is_cell_in_borders( cell ) ) return;
 
@@ -139,7 +129,7 @@ namespace tamachi {
 			uint8_t _borders;
 			int64_t _top, _right, _bottom, _left;
 
-			bool _is_point_in_borders( Point<int64_t> p ) {
+			bool _is_point_in_borders( Point p ) {
 				if ( !_borders ) return true;
 
 				if ( ( _borders & TOP_BORDER ) && ( p.y < _top * _ch ) ) return false;

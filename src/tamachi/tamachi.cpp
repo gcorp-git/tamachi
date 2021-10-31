@@ -17,8 +17,8 @@ namespace tamachi {
 	Listeners<stage::Stage*>* _listeners = nullptr;
 
 	void init( HINSTANCE hInstance, LPSTR lpCmdLine );
-	uint64_t on( std::string event, std::function<void(stage::Stage*)> listener );
-	void off( std::string event, uint64_t id );
+	Listener on( std::string event, std::function<void(stage::Stage*)> handler );
+	void off( Listener listener );
 	void start();
 	void stop();
 	void _loop();
@@ -34,12 +34,12 @@ namespace tamachi {
 		_listeners = new Listeners<stage::Stage*>();
 	}
 
-	uint64_t on( std::string event, std::function<void(stage::Stage*)> listener ) {
-		return _listeners->on( event, listener );
+	Listener on( std::string event, std::function<void(stage::Stage*)> handler ) {
+		return _listeners->on( event, handler );
 	}
 
-	void off( std::string event, uint64_t id ) {
-		_listeners->off( event, id );
+	void off( Listener listener ) {
+		_listeners->off( listener );
 	}
 
 	void start() {

@@ -5,8 +5,93 @@ namespace tamachi {
 	namespace scene {
 
 		struct Sprite {
-			int64_t x, y, z;
+			double x, y, z;
 			tile::Tile tile;
+		};
+
+		uint64_t _IDS = 0;
+
+		class Object {
+		public:
+			double x = 0;
+			double y = 0;
+			double z = 0;
+
+			Object() {
+				_id = ++_IDS;
+			}
+
+			~Object() {
+				for ( auto it : _sprites ) delete it.second;
+
+				_sprites.clear();
+			}
+
+			uint64_t id() { return _id; }
+
+			void set( tile::Tile* tile, double _x=0, double _y=0, double _z=0 ) {
+				if ( !tile ) return;
+
+				auto found = _sprites.find( tile->id );
+
+				Sprite* sprite = nullptr;
+
+				if ( found == _sprites.end() ) {
+					sprite = new Sprite();
+
+					sprite->tile = *tile;
+
+					_sprites.insert_or_assign( tile->id, sprite );
+				} else {
+					sprite = _sprites[ tile->id ];
+				}
+
+				sprite->x = _x;
+				sprite->y = _y;
+				sprite->z = _z;
+			}
+
+			void unset( tile::Tile* tile ) {
+				if ( !tile ) return;
+
+				auto found = _sprites.find( tile->id );
+
+				if ( found == _sprites.end() ) return;
+
+				delete _sprites[ tile->id ];
+				
+				_sprites.erase( found );
+			}
+
+			virtual void box( double _x, double _y, double _z, double width, double height, double depth, std::vector<Sprite>* result ) {
+				if ( !width || !height || !depth || !result ) return;
+				if ( !_sprites.size() ) return;
+
+				for ( auto it : _sprites ) {
+					auto sprite = it.second;
+
+					auto tw = static_cast<double>( sprite->tile.width );
+					auto th = static_cast<double>( sprite->tile.height );
+
+					if ( x + sprite->x + tw < _x || x + sprite->x >= _x + width ) continue;
+					if ( y + sprite->y + th < _y || y + sprite->y >= _y + height ) continue;
+					if ( z + sprite->z < _z || z + sprite->z >= _z + depth ) continue;
+
+					Sprite _sprite = *sprite;
+
+					_sprite.x = x + sprite->x;
+					_sprite.y = y + sprite->y;
+					_sprite.z = z + sprite->z;
+
+					result->push_back( _sprite );
+				}
+			}
+
+		private:
+			uint64_t _id = 0;
+
+			std::unordered_map<uint64_t, Sprite*> _sprites = {};
+
 		};
 
 		class Scene {
@@ -14,73 +99,38 @@ namespace tamachi {
 			
 			Scene( std::string name ) {
 				_name = name;
-				_storage = new Storage<uint64_t, Sprite>();
 			}
 
 			~Scene() {
-				_storage->clear();
-
-				delete _storage;
+				_objects.clear();
 			}
 
-			void set( tile::Tile* tile, int64_t x=0, int64_t y=0, int64_t z=0 ) {
-				if ( !tile ) return;
+			void set( Object* o ) {
+				if ( !o ) return;
 
-				auto id = tile->id;
-				auto sprite = _storage->get( id );
-
-				if ( !sprite ) sprite = new Sprite();
-
-				sprite->x = x;
-				sprite->y = y;
-				sprite->z = z;
-				sprite->tile = *tile;
-
-				_storage->set( id, sprite );
+				_objects.insert_or_assign( o->id(), o );
 			}
 
-			void unset( tile::Tile* tile ) {
-				if ( !tile ) return;
+			void unset( Object* o ) {
+				if ( !o ) return;
 
-				auto id = tile->id;
-				auto sprite = _storage->get( id );
+				auto found = _objects.find( o->id() );
 
-				if ( !sprite ) return;
+				if ( found == _objects.end() ) return;
 
-				_storage->remove( id );
-
-				delete sprite;
+				_objects.erase( found );
 			}
 
-			void box( int64_t x, int64_t y, int64_t z, uint64_t width, uint64_t height, uint64_t depth, std::vector<Sprite*>* result ) {
-				if ( !width || !height || !result ) return;
-
-				auto all_sprites = _storage->all();
-
-				if ( !all_sprites->size() ) return;
-
-				auto iw = static_cast<int64_t>( width );
-				auto ih = static_cast<int64_t>( height );
-
-				for ( auto it : *all_sprites ) {
-					auto sprite = it.second;
-
-					if ( sprite->x + static_cast<int64_t>( sprite->tile.width ) < x ) continue;
-					if ( sprite->x >= x + iw ) continue;
-
-					if ( sprite->y + static_cast<int64_t>( sprite->tile.height ) < y ) continue;
-					if ( sprite->y >= y + ih ) continue;
-					
-					if ( sprite->z < z || sprite->z >= z + depth ) continue;
-
-					result->push_back( sprite );
+			void box( double x, double y, double z, double width, double height, double depth, std::vector<Sprite>* result ) {
+				for ( auto it : _objects ) {
+					it.second->box( x, y, z, width, height, depth, result );
 				}
 			}
 
 		private:
 			std::string _name = "";
 
-			Storage<uint64_t, Sprite>* _storage = nullptr;
+			std::unordered_map<uint64_t, Object*> _objects = {};
 
 		};
 

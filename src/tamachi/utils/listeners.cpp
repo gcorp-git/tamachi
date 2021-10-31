@@ -3,6 +3,11 @@
 
 namespace tamachi {
 
+	struct Listener {
+		std::string event;
+		uint64_t id;
+	};
+
 	template<typename T>
 	class Listeners {
 	public:
@@ -15,7 +20,7 @@ namespace tamachi {
 			clear();
 		}
 
-		uint64_t on( std::string event, std::function<void(T)> listener ) {
+		Listener on( std::string event, std::function<void(T)> handler ) {
 			auto fm = _listeners.find( event );
 
 			if ( fm == _listeners.end() ) {
@@ -25,19 +30,19 @@ namespace tamachi {
 
 			auto id = ++_IDS;
 
-			_listeners[ event ].insert_or_assign( id, listener );
+			_listeners[ event ].insert_or_assign( id, handler );
 
-			return id;
+			return { event, id };
 		}
 
-		void off( std::string event, uint64_t id ) {
-			auto fm = _listeners.find( event );
+		void off( Listener listener ) {
+			auto fm = _listeners.find( listener.event );
 
 			if ( fm == _listeners.end() ) return;
 
-			auto map = _listeners[ event ];
+			auto map = _listeners[ listener.event ];
 
-			auto fl = map.find( id );
+			auto fl = map.find( listener.id );
 
 			if ( fl == map.end() ) return;
 

@@ -48,12 +48,12 @@ namespace tamachi {
 				//
 			}
 
-			uint64_t on( std::string event, std::function<void(int64_t)> listener ) {
-				return _listeners->on( event, listener );
+			Listener on( std::string event, std::function<void(int64_t)> handler ) {
+				return _listeners->on( event, handler );
 			}
 
-			void off( std::string event, uint64_t id ) {
-				_listeners->off( event, id );
+			void off( Listener listener ) {
+				_listeners->off( listener );
 			}
 
 			bool process( MSG* message ) {
